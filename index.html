@@ -31,11 +31,12 @@ svg{display:block;width:100%;touch-action:none;background:var(--cv)}
 .hint{font-size:12px;color:var(--mu);padding:6px 16px}
 .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 12px}.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:var(--sh)}
 .kpi b{display:block;font-size:24px;color:var(--ac)}.kpi span{font-size:12px;color:var(--mu)}
+.lgi{display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lgi b{background:#fdba74;color:#111827;border-radius:8px;text-align:center;padding:4px 0}.lgi em{font-style:normal;font-weight:700}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--bd);z-index:5}
 nav button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--mu);padding:8px 0;border-radius:12px}
 nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-style:normal;font-size:20px}
 </style></head><body>
-<header>Раскладка плитки <small>v5</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
+<header>Раскладка плитки <small>v6</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
 <section class="tab" id="t0"><div id="inp"><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
@@ -58,7 +59,7 @@ nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-sty
 <div class="full seg" id="cm"><button data-v="seam">Центр по шву</button><button data-v="tile">Центр по плитке</button></div>
 </div></div></section><section class="tab" id="t1"><div class="kpi" id="kp"></div>
 <div id="wrap"><button id="zr">⤢ Сброс</button><svg id="sv"></svg></div>
-<div class="hint">Двумя пальцами — масштаб, одним — сдвиг. <span class="lg"><span style="background:#fff"></span>целая<span style="background:#fdba74"></span>подрезка<span style="background:#c7cbd6"></span>отступ</span></div>
+<div class="card" id="lgw"><h4 style="margin-top:0">Подрезка (буквы на чертеже)</h4><div id="lgd"></div></div><div class="hint">Двумя пальцами — масштаб, одним — сдвиг. <span class="lg"><span style="background:#fff"></span>целая<span style="background:#fdba74"></span>подрезка<span style="background:#c7cbd6"></span>отступ</span></div>
 </section><section class="tab" id="t2"><div class="card" id="out"></div></section>
 <nav><button data-t="0"><i>⚙︎</i>Параметры</button><button data-t="1"><i>▦</i>Чертёж</button><button data-t="2"><i>∑</i>Итог</button></nav>
 <script>
@@ -131,10 +132,10 @@ function upd(){
  const pad=Math.max(RL,RW)*0.16;base=[-pad,-pad,RL+2*pad,RW+2*pad];
  if(!VB||VB.key!==RL+'x'+RW){VB={v:base.slice(),key:RL+'x'+RW}}
  sv.setAttribute('viewBox',VB.v.join(' '));
- sv.style.height=Math.min(innerHeight*0.65,sv.clientWidth*base[3]/base[2]||400)+'px';
+ sv.style.height=Math.min(innerHeight*0.8,sv.clientWidth*base[3]/base[2]||400)+'px';
  const sc=Math.max(RL,RW)/1000;
  el('rect',{x:0,y:0,width:RL,height:RW,fill:'#c7cbd6',stroke:'#334155','stroke-width':4*sc},sv);
- const df=Math.max(RL,RW)*0.03,dk=matchMedia('(prefers-color-scheme: dark)').matches?'#c7d2fe':'#1e293b';
+ const df=Math.max(Math.max(RL,RW)*0.03,11*base[2]/Math.max(sv.clientWidth||360,280)),dk=matchMedia('(prefers-color-scheme: dark)').matches?'#c7d2fe':'#1e293b';
  const dm=el('defs',{},sv),m2k=el('marker',{id:'dh',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},dm);
  m2k.setAttribute('markerWidth',df*0.5);m2k.setAttribute('markerHeight',df*0.5);el('path',{d:'M0,0L10,5L0,10z',fill:dk},m2k);
  function dim(x1,y1,x2,y2,txt,side){const L=Math.hypot(x2-x1,y2-y1);if(L<=0)return;const vert=x1===x2;
@@ -168,40 +169,55 @@ function upd(){
   let ang=Math.atan2(d[1],d[0])*180/Math.PI;if(ang>90.01)ang-=180;if(ang<=-90.01)ang+=180;
   const mx=(p1[0]+p2[0])/2,my=(p1[1]+p2[1])/2;
   const e=el('text',{x:mx,y:my,'font-size':f,'text-anchor':'middle','dominant-baseline':'central',fill:'#000',stroke:'#fff','stroke-width':f*0.25,'paint-order':'stroke','font-weight':600,transform:`rotate(${ang} ${mx} ${my})`},G);e.textContent=txt}
- let ref=null,rd=Infinity;
+const pxU=base[2]/Math.max(sv.clientWidth||360,280),minF=11*pxU;
  for(const t of tiles){const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);t.cx=xs.reduce((p,c)=>p+c)/xs.length;t.cy=ys.reduce((p,c)=>p+c)/ys.length;
-  if(!t.cut){const dd=Math.hypot(t.cx-cx,t.cy-cy);if(dd<rd){rd=dd;ref=t}}}
- for(const t of tiles){if(!t.cut&&t!==ref)continue;
-  const c2=chord(t.p,[t.cx,t.cy],D2),c1=chord(t.p,[t.cx,t.cy],D1);if(!c1||!c2)continue;
-  const l1=c1[1]-c1[0],l2=c2[1]-c2[0];
-  // arrow along D1 shifted along D2 by 25% of l2, and vice versa
-  const s2=(c2[0]+c2[1])/2-l2*0.25,s1=(c1[0]+c1[1])/2+l1*0.25;
-  dimArrow(t.p,[t.cx+D2[0]*s2,t.cy+D2[1]*s2],D1,l2);
-  dimArrow(t.p,[t.cx+D1[0]*s1,t.cy+D1[1]*s1],D2,l1)}
+  const pr1=t.p.map(p=>p[0]*D1[0]+p[1]*D1[1]),pr2=t.p.map(p=>p[0]*D2[0]+p[1]*D2[1]);t.e1=Math.max(...pr1)-Math.min(...pr1);t.e2=Math.max(...pr2)-Math.min(...pr2)}
+ const full=tiles.filter(t=>!t.cut).length,cuts=tiles.filter(t=>t.cut);
+ const gm={};
+ for(const t of cuts){let key,desc;
+  if(diag){const sides=t.p.length;key=`${Math.round(t.e1)}|${Math.round(t.e2)}|${Math.round(t.ar/500)}`;
+   desc=`${sides==3?'треугольник':sides==4?'четырёхугольник':sides+'-угольник'} ≈${Math.round(t.e1)}×${Math.round(t.e2)} по осям плитки — отмерить ${Math.round(t.e1)} по длине и ${Math.round(t.e2)} по ширине, рез под углом ${AN}°/${90-AN}°; длинная сторона ${Math.round(t.L)}`;
+   t.short=Math.round(t.e1)+'×'+Math.round(t.e2)}
+  else{const cw=t.w<a-0.05,ch=t.h<b-0.05;key=r1(t.w)+'x'+r1(t.h);
+   desc=cw&&ch?`угол ${r1(t.w)}×${r1(t.h)} — отпилить ${r1(a-t.w)} по длине и ${r1(b-t.h)} по ширине`:
+   cw?`${r1(t.w)}×${b} — отпилить ${r1(a-t.w)} мм по длине`:`${a}×${r1(t.h)} — отпилить ${r1(b-t.h)} мм по ширине`;
+   t.short=cw&&ch?Math.round(t.w)+'×'+Math.round(t.h):String(Math.round(cw?t.w:t.h))}
+  (gm[key]=gm[key]||{desc,n:0,ts:[]}).n++;gm[key].ts.push(t)}
+ const groups=Object.values(gm).sort((x,y)=>y.n-x.n);
+ groups.forEach((g,i)=>{g.L=i<26?String.fromCharCode(65+i):'Z'+(i-25);g.ts.forEach(t=>t.g=g.L)});
+ const boxes=[];const hit=(b)=>boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]);
+ function put(x,y,txt,f,rot,force){const w=txt.length*f*0.62+f*0.3,h=f*1.15;const bb=rot?[x-h/2,y-w/2,x+h/2,y+w/2]:[x-w/2,y-h/2,x+w/2,y+h/2];
+  if(hit(bb)&&!force)return false;boxes.push(bb);
+  const e=el('text',{x,y,'font-size':f,'text-anchor':'middle','dominant-baseline':'central',fill:'#111827',stroke:'#fff','stroke-width':f*0.22,'paint-order':'stroke','font-weight':700},G);e.textContent=txt;
+  if(rot)e.setAttribute('transform',`rotate(-90 ${x} ${y})`);return true}
+ let ref=null,rd=Infinity;for(const t of tiles)if(!t.cut){const dd=Math.hypot(t.cx-cx,t.cy-cy);if(dd<rd){rd=dd;ref=t}}
+ if(ref){const c2=chord(ref.p,[ref.cx,ref.cy],D2),c1=chord(ref.p,[ref.cx,ref.cy],D1);if(c1&&c2){const l1=c1[1]-c1[0],l2=c2[1]-c2[0];
+  dimArrow(ref.p,[ref.cx+D2[0]*(-l2*0.25),ref.cy+D2[1]*(-l2*0.25)],D1,l2);dimArrow(ref.p,[ref.cx+D1[0]*(l1*0.25),ref.cy+D1[1]*(l1*0.25)],D2,l1)}}
+ const order=cuts.slice().sort((x,y)=>y.ar-x.ar||0);
+ for(const t of order){const k=Math.sqrt((t.ar||t.w*t.h)/(t.w*t.h));const bw=t.w*(diag?k*0.75:0.9),bh=t.h*(diag?k*0.75:0.9);
+  const full2=t.g+' '+t.short;let done=false;
+  for(const[txt,force]of[[full2,0],[t.g,0]]){const fh=Math.min(fs,bh/1.15,bw/(txt.length*0.62+0.3)),fv=Math.min(fs,bw/1.15,bh/(txt.length*0.62+0.3));
+   const rot=!diag&&fv>fh*1.1,f=Math.max(fh,fv);if(f<minF)continue;if(put(t.cx,t.cy,txt,f,rot,0)){done=true;break}}
+  if(!done)put(t.cx,t.cy,t.g,minF,false,0)}
+ $('lgd').innerHTML=groups.map(g=>`<div class="lgi"><b>${g.L}</b><span>${g.desc}</span><em>${g.n} шт</em></div>`).join('');
  el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  // summary
- const full=tiles.filter(t=>!t.cut).length,cuts=tiles.filter(t=>t.cut);
- const grp={};
- for(const t of cuts){let key;
-  if(diag)key=`кусок ≈${Math.round(t.w)}×${Math.round(t.h)} (габарит), длинная сторона ${Math.round(t.L)}`;
-  else{const cw=t.w<a-0.05,ch=t.h<b-0.05;
-   key=cw&&ch?`угол ${r1(t.w)}×${r1(t.h)} (отпилить ${r1(a-t.w)} по длине и ${r1(b-t.h)} по ширине)`:
-   cw?`${r1(t.w)}×${b} — отпилить ${r1(a-t.w)} мм по длине`:`${a}×${r1(t.h)} — отпилить ${r1(b-t.h)} мм по ширине`}
-  grp[key]=(grp[key]||0)+1}
+
+ 
  const tot=tiles.length,rs=n('rs'),need=Math.ceil(tot*(1+rs/100));
  const m2=W*H/1e6;
  $('kp').innerHTML=`<div><b>${need}</b><span>купить (+${rs}%)</span></div><div><b>${cuts.length}</b><span>подрезок / ${full} целых</span></div>`;
  let h=`<table><tr><td>Плитка</td><td><b>${a}×${b}</b>, поворот ${AN}°</td></tr><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
  <tr><td>Целых плиток</td><td><b>${full}</b></td></tr><tr><td>Подрезанных</td><td><b>${cuts.length}</b></td></tr>
  <tr><td>Всего мест</td><td><b>${tot}</b></td></tr><tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b></td></tr></table>`;
- h+='<h4>Подрезка (размер куска → сколько отпилить)</h4><table>'+Object.entries(grp).map(([k,v])=>`<tr><td>${k}</td><td><b>${v} шт</b></td></tr>`).join('')+'</table>';
+ h+='<h4>Подрезка — буквы как на чертеже</h4><div class="lgl">'+$('lgd').innerHTML+'</div>';
  if(!diag){const ew=Math.min(...cuts.filter(t=>t.w<a-0.05).map(t=>t.w),a),eh=Math.min(...cuts.filter(t=>t.h<b-0.05).map(t=>t.h),b);
   if(ew<a/3)h+=`<div class="warn">Узкая подрезка у левой/правой стены: ${r1(ew)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(eh<b/3)h+=`<div class="warn">Узкая подрезка у верхней/нижней стены: ${r1(eh)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
-  if(sh)h+='<div class="hint">При укладке вразбежку часть подрезок в рядах разная — смотрите подписи на схеме.</div>'}
+  if(sh)h+='<div class="hint">При укладке вразбежку часть подрезок в рядах разная — смотрите буквы на чертеже.</div>'}
  else h+=`<div class="hint">Поворот ${AN}°: подрезки — косые куски (размер — габарит и длинная сторона), расход больше; рекомендуется запас 15%.</div>`;
- h+='<div class="hint">Красные пунктиры — центральные оси. Стрелки — размеры куска в мм по осям плитки; на одной целой плитке у центра — эталонный размер. Мелкие куски без подписи есть в списке.</div>';
+ h+='<div class="hint">Красные пунктиры — центральные оси. Оранжевые куски помечены буквой (и размером, если помещается) — расшифровка в списке. Стрелки на целой плитке у центра — эталонный размер.</div>';
  out.innerHTML=h}
 // pan/zoom
 const sv=$('sv'),pts=new Map();let last=null;
