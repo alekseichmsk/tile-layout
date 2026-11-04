@@ -2,30 +2,41 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Раскладка плитки</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;overflow-x:hidden}
-body{font-family:system-ui,-apple-system,Roboto,sans-serif;background:#f2f3f5;color:#222;font-size:16px}
-header{background:#2b5d8a;color:#fff;padding:12px 14px;font-size:18px;font-weight:600}
-details{background:#fff;margin:8px;border-radius:12px;box-shadow:0 1px 3px #0002}
-summary{padding:14px;font-weight:600;font-size:17px;cursor:pointer}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
-.g h4{grid-column:1/-1;margin:6px 0 0;font-size:14px;color:#2b5d8a}
-label{display:flex;flex-direction:column;font-size:13px;color:#555;gap:4px}
-input,select{font-size:18px;padding:10px;border:1px solid #bbb;border-radius:8px;width:100%;min-width:0;background:#fff}
+:root{--bg:#f4f5f9;--card:#fff;--tx:#14161a;--mu:#6b7280;--ac:#4f46e5;--ac2:#eef2ff;--bd:#e5e7eb;--in:#f8f9fb;--sh:0 4px 20px rgba(17,24,39,.06),0 1px 3px rgba(17,24,39,.05);--cv:#eceef3}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1015;--card:#181b22;--tx:#eef0f4;--mu:#9aa1ad;--ac:#818cf8;--ac2:#232744;--bd:#2a2e38;--in:#11141a;--sh:0 4px 20px rgba(0,0,0,.35);--cv:#22252d}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;overflow-x:hidden}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);font-size:16px;padding-bottom:84px}
+header{padding:18px 18px 6px;font-size:22px;font-weight:700;letter-spacing:-.02em}header small{color:var(--mu);font-weight:500}
+.sub{padding:0 18px 8px;color:var(--mu);font-size:14px}
+.tab{display:none}.tab.on{display:block}
+.card,#inp,#wrap{background:var(--card);margin:10px 12px;border-radius:16px;box-shadow:var(--sh);border:1px solid var(--bd)}
+.card{padding:14px 16px;font-size:15px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.g h4{grid-column:1/-1;margin:8px 0 -2px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);font-weight:600}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--mu);gap:6px;font-weight:500}
+input:not([type=range]),select{font:inherit;font-size:18px;font-weight:600;color:var(--tx);padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;width:100%;min-width:0;background:var(--in);outline:none}
+input:focus{border-color:var(--ac)}
 .full{grid-column:1/-1}
-.seg{display:flex;gap:6px}.seg button{flex:1;font-size:15px;padding:10px;border:1px solid #2b5d8a;background:#fff;color:#2b5d8a;border-radius:8px}
-.seg button.on{background:#2b5d8a;color:#fff}
-#wrap{margin:8px;background:#fff;border-radius:12px;box-shadow:0 1px 3px #0002;overflow:hidden;position:relative}
-input[type=range]{accent-color:#2b5d8a}input[type=range]::-webkit-slider-thumb{width:34px;height:34px}
-svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
-#zr{position:absolute;right:8px;top:8px;font-size:14px;padding:6px 10px;border-radius:8px;border:1px solid #888;background:#fffd}
-.card{background:#fff;margin:8px;border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px #0002;font-size:15px}
-.card table{width:100%;border-collapse:collapse}.card td{padding:4px 2px;border-bottom:1px solid #eee}
-.warn{background:#fff3cd;border-left:4px solid #e0a800;padding:8px 10px;margin:8px 0;border-radius:6px}
-.lg span{display:inline-block;width:14px;height:14px;vertical-align:middle;margin:0 4px 0 8px;border:1px solid #666}
-.hint{font-size:12px;color:#777;padding:4px 10px}
+.seg{display:flex;gap:4px;background:var(--in);border:1px solid var(--bd);border-radius:12px;padding:4px}
+.seg button{flex:1;font:inherit;font-size:14px;font-weight:600;padding:10px 4px;border:0;background:transparent;color:var(--mu);border-radius:9px}
+.seg button.on{background:var(--card);color:var(--ac);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+input[type=range]{width:100%;accent-color:var(--ac);height:40px}
+#wrap{overflow:hidden;position:relative}
+svg{display:block;width:100%;touch-action:none;background:var(--cv)}
+#zr{position:absolute;right:10px;top:10px;font:inherit;font-size:13px;font-weight:600;padding:8px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);box-shadow:var(--sh)}
+.card table{width:100%;border-collapse:collapse}.card td{padding:8px 2px;border-bottom:1px solid var(--bd)}.card td:last-child{text-align:right;white-space:nowrap}
+.card h4{margin:14px 0 4px;font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
+.warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);padding:10px 12px;margin:10px 0;border-radius:12px;font-size:14px}
+.lg span{display:inline-block;width:12px;height:12px;vertical-align:middle;margin:0 4px 0 10px;border-radius:3px;border:1px solid var(--bd)}
+.hint{font-size:12px;color:var(--mu);padding:6px 16px}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 12px}.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:var(--sh)}
+.kpi b{display:block;font-size:24px;color:var(--ac)}.kpi span{font-size:12px;color:var(--mu)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--bd);z-index:5}
+nav button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--mu);padding:8px 0;border-radius:12px}
+nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-style:normal;font-size:20px}
 </style></head><body>
-<header>Раскладка плитки — шов по центру <small style="opacity:.6;font-size:11px">v4</small></header>
-<details id="inp" open><summary>Параметры (мм)</summary><div class="g">
+<header>Раскладка плитки <small>v5</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
+<section class="tab" id="t0"><div id="inp"><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
 <label>Ширина (по вертикали)<input id="rw" inputmode="numeric"></label>
@@ -40,15 +51,16 @@ svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 <label>Слева<input id="ol" inputmode="numeric"></label>
 <label>Справа<input id="or" inputmode="numeric"></label>
 <h4>Укладка</h4>
-<label class="full">Тип<select id="ty"><option value="0">Прямая</option><option value="0.5">Вразбежку 1/2</option><option value="0.3333333">Вразбежку 1/3</option></select></label>
+<div class="full seg" id="tys"><button data-v="0">Прямая</button><button data-v="0.5">Вразб. 1/2</button><button data-v="0.3333333">Вразб. 1/3</button></div><select id="ty" hidden><option value="0">Прямая</option><option value="0.5">Вразбежку 1/2</option><option value="0.3333333">Вразбежку 1/3</option></select>
 <div class="full" style="font-size:14px;color:#555">Поворот плитки: <b id="angv" style="font-size:18px;color:#2b5d8a">0°</b>
 <input type="range" id="ang" min="0" max="90" step="1" style="padding:0;height:44px;border:0">
 <div class="seg" id="angq"><button data-a="0">0°</button><button data-a="45">45° (диагональ)</button><button data-a="90">90°</button></div></div>
 <div class="full seg" id="cm"><button data-v="seam">Центр по шву</button><button data-v="tile">Центр по плитке</button></div>
-</div></details>
+</div></div></section><section class="tab" id="t1"><div class="kpi" id="kp"></div>
 <div id="wrap"><button id="zr">⤢ Сброс</button><svg id="sv"></svg></div>
-<div class="hint">Двумя пальцами — масштаб, одним — сдвиг. <span class="lg"><span style="background:#fafafa"></span>целая<span style="background:#f4a261"></span>подрезка<span style="background:#cfd8dc"></span>отступ</span></div>
-<div class="card" id="out"></div>
+<div class="hint">Двумя пальцами — масштаб, одним — сдвиг. <span class="lg"><span style="background:#fff"></span>целая<span style="background:#fdba74"></span>подрезка<span style="background:#c7cbd6"></span>отступ</span></div>
+</section><section class="tab" id="t2"><div class="card" id="out"></div></section>
+<nav><button data-t="0"><i>⚙︎</i>Параметры</button><button data-t="1"><i>▦</i>Чертёж</button><button data-t="2"><i>∑</i>Итог</button></nav>
 <script>
 const $=id=>document.getElementById(id);
 const F=['rl','rw','tl','tw','gj','rs','ot','ob','ol','or','ty'];
@@ -59,7 +71,10 @@ F.forEach(k=>{$(k).value=S[k];$(k).addEventListener('input',()=>{S[k]=$(k).value
 $('ang').value=S.ang;$('ang').addEventListener('input',()=>{S.ang=$('ang').value;upd()});
 document.querySelectorAll('#angq button').forEach(b=>b.onclick=()=>{S.ang=b.dataset.a;$('ang').value=S.ang;upd()});
 document.querySelectorAll('#cm button').forEach(b=>b.onclick=()=>{S.cm=b.dataset.v;upd()});
-if(innerWidth<600&&localStorage.getItem('tileApp'))$('inp').open=false;
+let TAB=Q.get('tab')||(localStorage.getItem('tileApp')?'1':'0');
+function tab(t){TAB=t;document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',String(i)==t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0);upd()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+document.querySelectorAll('#tys button').forEach(b=>b.onclick=()=>{S.ty=b.dataset.v;$('ty').value=S.ty;upd()});
 const NS='http://www.w3.org/2000/svg';
 function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e}
 function clip(poly,x0,y0,x1,y1){
@@ -77,6 +92,7 @@ function upd(){
  localStorage.setItem('tileApp',JSON.stringify(S));
  if(S.ty==='d'){S.ty='0';S.ang=45;$('ty').value='0';$('ang').value=45}
  const AN=Math.min(90,Math.max(0,+S.ang||0));$('angv').textContent=AN+'°';document.querySelectorAll('#angq button').forEach(b=>b.classList.toggle('on',+b.dataset.a==AN));
+ document.querySelectorAll('#tys button').forEach(b=>b.classList.toggle('on',b.dataset.v==S.ty));
  document.querySelectorAll('#cm button').forEach(b=>b.classList.toggle('on',b.dataset.v==S.cm));
  const n=k=>Math.max(0,parseFloat(String(S[k]).replace(',','.'))||0);
  const RL=n('rl'),RW=n('rw'),R90=AN==90;let a=n('tl'),b=n('tw'),g=n('gj'),ot=n('ot'),ob=n('ob'),ol=n('ol'),or=n('or');
@@ -117,8 +133,8 @@ function upd(){
  sv.setAttribute('viewBox',VB.v.join(' '));
  sv.style.height=Math.min(innerHeight*0.65,sv.clientWidth*base[3]/base[2]||400)+'px';
  const sc=Math.max(RL,RW)/1000;
- el('rect',{x:0,y:0,width:RL,height:RW,fill:'#cfd8dc',stroke:'#333','stroke-width':4*sc},sv);
- const df=Math.max(RL,RW)*0.03,dk='#1d3557';
+ el('rect',{x:0,y:0,width:RL,height:RW,fill:'#c7cbd6',stroke:'#334155','stroke-width':4*sc},sv);
+ const df=Math.max(RL,RW)*0.03,dk=matchMedia('(prefers-color-scheme: dark)').matches?'#c7d2fe':'#1e293b';
  const dm=el('defs',{},sv),m2k=el('marker',{id:'dh',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},dm);
  m2k.setAttribute('markerWidth',df*0.5);m2k.setAttribute('markerHeight',df*0.5);el('path',{d:'M0,0L10,5L0,10z',fill:dk},m2k);
  function dim(x1,y1,x2,y2,txt,side){const L=Math.hypot(x2-x1,y2-y1);if(L<=0)return;const vert=x1===x2;
@@ -137,9 +153,9 @@ function upd(){
  dim(RL+o1,0,RL+o1,ot,String(ot),-1);dim(RL+o1,RW-ob,RL+o1,RW,String(ob),-1);
  dim(0,RW+o1,ol,RW+o1,String(ol),-1);dim(RL-or,RW+o1,RL,RW+o1,String(or),-1);
  const G=el('g',{transform:`translate(${ol},${ot})`},sv);
- el('rect',{x:0,y:0,width:W,height:H,fill:'#9e9e9e'},G);
+ el('rect',{x:0,y:0,width:W,height:H,fill:'#8b93a3'},G);
  const fs=Math.max(Math.min(a,b)*0.22,Math.max(RL,RW)*0.024);
- for(const t of tiles){el('polygon',{points:t.p.map(p=>p.join(',')).join(' '),fill:t.cut?'#f4a261':'#fafafa',stroke:'#777','stroke-width':0.6*sc},G)}
+ for(const t of tiles){el('polygon',{points:t.p.map(p=>p.join(',')).join(' '),fill:t.cut?'#fdba74':'#ffffff',stroke:'#94a3b8','stroke-width':0.6*sc},G)}
  const fmin=Math.max(RL,RW)*0.004,ANr=diag?AN*Math.PI/180:0,D1=[Math.cos(ANr),Math.sin(ANr)],D2=[-D1[1],D1[0]];
  const defs=el('defs',{},sv);const mk=el('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse',markerUnits:'strokeWidth'},defs);el('path',{d:'M0,0L10,5L0,10z',fill:'#123'},mk);
  function chord(q,c,d){let lo=Infinity,hi=-Infinity;for(let m=0;m<q.length;m++){const A=q[m],B=q[(m+1)%q.length],ex=B[0]-A[0],ey=B[1]-A[1];
@@ -162,8 +178,8 @@ function upd(){
   const s2=(c2[0]+c2[1])/2-l2*0.25,s1=(c1[0]+c1[1])/2+l1*0.25;
   dimArrow(t.p,[t.cx+D2[0]*s2,t.cy+D2[1]*s2],D1,l2);
   dimArrow(t.p,[t.cx+D1[0]*s1,t.cy+D1[1]*s1],D2,l1)}
- el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
- el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
+ el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
+ el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  // summary
  const full=tiles.filter(t=>!t.cut).length,cuts=tiles.filter(t=>t.cut);
  const grp={};
@@ -175,6 +191,7 @@ function upd(){
   grp[key]=(grp[key]||0)+1}
  const tot=tiles.length,rs=n('rs'),need=Math.ceil(tot*(1+rs/100));
  const m2=W*H/1e6;
+ $('kp').innerHTML=`<div><b>${need}</b><span>купить (+${rs}%)</span></div><div><b>${cuts.length}</b><span>подрезок / ${full} целых</span></div>`;
  let h=`<table><tr><td>Плитка</td><td><b>${a}×${b}</b>, поворот ${AN}°</td></tr><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
  <tr><td>Целых плиток</td><td><b>${full}</b></td></tr><tr><td>Подрезанных</td><td><b>${cuts.length}</b></td></tr>
  <tr><td>Всего мест</td><td><b>${tot}</b></td></tr><tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b></td></tr></table>`;
@@ -201,5 +218,5 @@ function zoom(m,f){const v=VB.v,[x,y]=toSvg(m[0],m[1]);f=Math.max(Math.min(f,bas
  v[0]=x-(x-v[0])*f;v[1]=y-(y-v[1])*f;v[2]*=f;v[3]*=f}
 sv.addEventListener('wheel',e=>{e.preventDefault();zoom([e.clientX,e.clientY],e.deltaY>0?1.15:0.87);sv.setAttribute('viewBox',VB.v.join(' '))},{passive:false});
 $('zr').onclick=()=>{VB.v=base.slice();sv.setAttribute('viewBox',VB.v.join(' '))};
-addEventListener('resize',upd);upd();
+addEventListener('resize',upd);tab(TAB);
 </script></body></html>
