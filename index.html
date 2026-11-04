@@ -15,6 +15,7 @@ input,select{font-size:18px;padding:10px;border:1px solid #bbb;border-radius:8px
 .seg{display:flex;gap:6px}.seg button{flex:1;font-size:15px;padding:10px;border:1px solid #2b5d8a;background:#fff;color:#2b5d8a;border-radius:8px}
 .seg button.on{background:#2b5d8a;color:#fff}
 #wrap{margin:8px;background:#fff;border-radius:12px;box-shadow:0 1px 3px #0002;overflow:hidden;position:relative}
+input[type=range]{accent-color:#2b5d8a}input[type=range]::-webkit-slider-thumb{width:34px;height:34px}
 svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 #zr{position:absolute;right:8px;top:8px;font-size:14px;padding:6px 10px;border-radius:8px;border:1px solid #888;background:#fffd}
 .card{background:#fff;margin:8px;border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px #0002;font-size:15px}
@@ -23,7 +24,7 @@ svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 .lg span{display:inline-block;width:14px;height:14px;vertical-align:middle;margin:0 4px 0 8px;border:1px solid #666}
 .hint{font-size:12px;color:#777;padding:4px 10px}
 </style></head><body>
-<header>Раскладка плитки — шов по центру</header>
+<header>Раскладка плитки — шов по центру <small style="opacity:.6;font-size:11px">v2</small></header>
 <details id="inp" open><summary>Параметры (мм)</summary><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
@@ -39,7 +40,10 @@ svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 <label>Слева<input id="ol" inputmode="numeric"></label>
 <label>Справа<input id="or" inputmode="numeric"></label>
 <h4>Укладка</h4>
-<label class="full">Тип<select id="ty"><option value="0">Прямая</option><option value="0.5">Вразбежку 1/2</option><option value="0.3333333">Вразбежку 1/3</option><option value="d">Диагональ 45°</option></select></label>
+<label class="full">Тип<select id="ty"><option value="0">Прямая</option><option value="0.5">Вразбежку 1/2</option><option value="0.3333333">Вразбежку 1/3</option></select></label>
+<div class="full" style="font-size:14px;color:#555">Поворот плитки: <b id="angv" style="font-size:18px;color:#2b5d8a">0°</b>
+<input type="range" id="ang" min="0" max="90" step="1" style="padding:0;height:44px;border:0">
+<div class="seg" id="angq"><button data-a="0">0°</button><button data-a="45">45° (диагональ)</button><button data-a="90">90°</button></div></div>
 <div class="full seg" id="cm"><button data-v="seam">Центр по шву</button><button data-v="tile">Центр по плитке</button></div>
 </div></details>
 <div id="wrap"><button id="zr">⤢ Сброс</button><svg id="sv"></svg></div>
@@ -48,10 +52,12 @@ svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 <script>
 const $=id=>document.getElementById(id);
 const F=['rl','rw','tl','tw','gj','rs','ot','ob','ol','or','ty'];
-const D={rl:4000,rw:3000,tl:600,tw:300,gj:2,rs:10,ot:10,ob:10,ol:10,or:10,ty:'0'};
+const D={ang:0,rl:4000,rw:3000,tl:600,tw:300,gj:2,rs:10,ot:10,ob:10,ol:10,or:10,ty:'0'};
 let S=Object.assign({},D,{cm:'seam'},JSON.parse(localStorage.getItem('tileApp')||'{}'));
-const Q=new URLSearchParams(location.search);F.concat('cm').forEach(k=>{if(Q.has(k))S[k]=Q.get(k)});
+const Q=new URLSearchParams(location.search);F.concat('cm','ang').forEach(k=>{if(Q.has(k))S[k]=Q.get(k)});
 F.forEach(k=>{$(k).value=S[k];$(k).addEventListener('input',()=>{S[k]=$(k).value;upd()})});
+$('ang').value=S.ang;$('ang').addEventListener('input',()=>{S.ang=$('ang').value;upd()});
+document.querySelectorAll('#angq button').forEach(b=>b.onclick=()=>{S.ang=b.dataset.a;$('ang').value=S.ang;upd()});
 document.querySelectorAll('#cm button').forEach(b=>b.onclick=()=>{S.cm=b.dataset.v;upd()});
 if(innerWidth<600&&localStorage.getItem('tileApp'))$('inp').open=false;
 const NS='http://www.w3.org/2000/svg';
@@ -69,18 +75,20 @@ const r1=v=>Math.round(v*10)/10;
 let VB=null,base=null;
 function upd(){
  localStorage.setItem('tileApp',JSON.stringify(S));
+ if(S.ty==='d'){S.ty='0';S.ang=45;$('ty').value='0';$('ang').value=45}
+ const AN=Math.min(90,Math.max(0,+S.ang||0));$('angv').textContent=AN+'°';document.querySelectorAll('#angq button').forEach(b=>b.classList.toggle('on',+b.dataset.a==AN));
  document.querySelectorAll('#cm button').forEach(b=>b.classList.toggle('on',b.dataset.v==S.cm));
  const n=k=>Math.max(0,parseFloat(String(S[k]).replace(',','.'))||0);
- const RL=n('rl'),RW=n('rw'),a=n('tl'),b=n('tw'),g=n('gj'),ot=n('ot'),ob=n('ob'),ol=n('ol'),or=n('or');
+ const RL=n('rl'),RW=n('rw'),R90=AN==90;let a=n('tl'),b=n('tw'),g=n('gj'),ot=n('ot'),ob=n('ob'),ol=n('ol'),or=n('or');
  const sv=$('sv');sv.innerHTML='';const out=$('out');
  const W=RL-ol-or,H=RW-ot-ob;
  if(!(RL>0&&RW>0&&a>0&&b>0&&W>0&&H>0)){out.innerHTML='<div class="warn">Проверьте размеры: все значения должны быть больше нуля, а отступы — меньше размеров комнаты.</div>';return}
  if((W/(a+g))*(H/(b+g))>20000){out.innerHTML='<div class="warn">Слишком много плиток для отрисовки.</div>';return}
- const diag=S.ty==='d',sh=diag?0:parseFloat(S.ty),seam=S.cm==='seam';
+ const diag=AN>0&&AN<90,sh=parseFloat(S.ty)||0,seam=S.cm==='seam';
  const px=a+g,py=b+g,cx=W/2,cy=H/2;
  const ox=seam?g/2:-a/2, oy=seam?g/2:-b/2; // tile start relative to center
  const tiles=[];
- if(!diag){
+ if(!diag&&!R90){
   const j0=Math.floor((-cy-oy-b)/py)-1,j1=Math.ceil((cy-oy)/py)+1;
   for(let j=j0;j<=j1;j++){const y=cy+oy+j*py;if(y+b<=0||y>=H)continue;
    let s=((j*sh)%1+1)%1;if(s>0.5+1e-9&&sh!==0.3333333)s-=1;
@@ -90,14 +98,19 @@ function upd(){
     if(X1-X0<0.05||Y1-Y0<0.05)continue;
     tiles.push({p:[[X0,Y0],[X1,Y0],[X1,Y1],[X0,Y1]],w:X1-X0,h:Y1-Y0,cut:(X1-X0<a-0.05||Y1-Y0<b-0.05)})}}
  }else{
-  const c=Math.SQRT1_2,R=Math.hypot(W,H)/2+Math.max(a,b)*2;
-  for(let j=Math.floor((-R-oy)/py)-1;j<=Math.ceil((R-oy)/py)+1;j++)for(let k=Math.floor((-R-ox)/px)-1;k<=Math.ceil((R-ox)/px)+1;k++){
-   const u=ox+k*px,v=oy+j*py;
-   const P=[[u,v],[u+a,v],[u+a,v+b],[u,v+b]].map(([x,y])=>[cx+(x-y)*c,cy+(x+y)*c]);
+  const t=AN*Math.PI/180,co=Math.cos(t),si=Math.sin(t),R=Math.hypot(W,H)/2+Math.max(a,b)*2;
+  for(let j=Math.floor((-R-oy)/py)-1;j<=Math.ceil((R-oy)/py)+1;j++){
+   let s2=((j*sh)%1+1)%1;if(s2>0.5+1e-9&&sh!==0.3333333)s2-=1;
+   for(let k=Math.floor((-R-ox-px)/px)-1;k<=Math.ceil((R-ox)/px)+1;k++){
+   const u=ox+(k+s2)*px,v=oy+j*py;
+   const P=[[u,v],[u+a,v],[u+a,v+b],[u,v+b]].map(([x,y])=>[cx+x*co-y*si,cy+x*si+y*co]);
    const q=clip(P,0,0,W,H);if(q.length<3)continue;const ar=area(q);if(ar<1)continue;
    const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);
-   tiles.push({p:q,ar,cut:ar<a*b*0.999,w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)})}
+   let L=0;for(let m=0;m<q.length;m++){const A=q[m],B=q[(m+1)%q.length];L=Math.max(L,Math.hypot(A[0]-B[0],A[1]-B[1]))}
+   tiles.push({p:q,ar,L,cut:ar<a*b*0.999,w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),
+    mx:xs.reduce((p,c)=>p+c)/xs.length,my:ys.reduce((p,c)=>p+c)/ys.length})}}
  }
+ if(R90){[a,b]=[b,a];tiles.forEach(t=>{const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);const X0=Math.min(...xs),Y0=Math.min(...ys);t.p=[[X0,Y0],[X0+t.w,Y0],[X0+t.w,Y0+t.h],[X0,Y0+t.h]];t.cut=t.w<a-0.05||t.h<b-0.05})}
  // draw
  const pad=Math.max(RL,RW)*0.03;base=[-pad,-pad,RL+2*pad,RW+2*pad];
  if(!VB||VB.key!==RL+'x'+RW){VB={v:base.slice(),key:RL+'x'+RW}}
@@ -109,25 +122,34 @@ function upd(){
  el('rect',{x:0,y:0,width:W,height:H,fill:'#9e9e9e'},G);
  const fs=Math.max(Math.min(a,b)*0.22,Math.max(RL,RW)*0.024);
  for(const t of tiles){el('polygon',{points:t.p.map(p=>p.join(',')).join(' '),fill:t.cut?'#f4a261':'#fafafa',stroke:'#777','stroke-width':0.6*sc},G)}
- for(const t of tiles){if(!t.cut||diag)continue;const mx=t.p[0][0]+t.w/2,my=t.p[0][1]+t.h/2;
-  const f=Math.min(fs,t.w*0.42,t.h*0.6);if(f<fs*0.25)continue;
-  const tx=el('text',{x:mx,y:my,'font-size':f,'text-anchor':'middle','dominant-baseline':'middle',fill:'#000'},G);
-  tx.textContent=t.w<a-0.05&&t.h<b-0.05?`${r1(t.w)}×${r1(t.h)}`:t.w<a-0.05?r1(t.w):r1(t.h);
-  if(t.w<t.h*0.6&&t.w<a-0.05)tx.setAttribute('transform',`rotate(-90 ${mx} ${my})`)}
+ const fmin=Math.max(RL,RW)*0.0035;
+ for(const t of tiles){if(!t.cut)continue;let mx,my,opts,bw,bh;
+  if(diag){mx=t.mx;my=t.my;opts=[String(Math.round(t.L))];
+   // inscribed-ish box: shrink by area ratio
+   const k=Math.sqrt(t.ar/(t.w*t.h))*0.6;bw=t.w*k;bh=t.h*k}
+  else{mx=t.p[0][0]+t.w/2;my=t.p[0][1]+t.h/2;bw=t.w;bh=t.h;const cw=t.w<a-0.05,ch=t.h<b-0.05;
+   opts=cw&&ch?[`${r1(t.w)}×${r1(t.h)}`,`${Math.round(t.w)}×${Math.round(t.h)}`]:[String(r1(cw?t.w:t.h)),String(Math.round(cw?t.w:t.h))]}
+  let best=null;
+  for(const tx of opts){const L=tx.length*0.6;
+   const fh=Math.min(fs,bh*0.7,bw*0.88/L),fv=Math.min(fs,bw*0.7,bh*0.88/L);
+   const c={tx,f:Math.max(fh,fv),v:fv>fh*1.05};if(!best||c.f>best.f*1.2)best=c;if(c.f>=fs*0.6)break}
+  if(best.f<fmin)continue;
+  const e=el('text',{x:mx,y:my,'font-size':best.f,'text-anchor':'middle','dominant-baseline':'central',fill:'#000'},G);e.textContent=best.tx;
+  if(best.v)e.setAttribute('transform',`rotate(-90 ${mx} ${my})`)}
  el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  // summary
  const full=tiles.filter(t=>!t.cut).length,cuts=tiles.filter(t=>t.cut);
  const grp={};
  for(const t of cuts){let key;
-  if(diag)key='треугольник/трапеция';
+  if(diag)key=`кусок ≈${Math.round(t.w)}×${Math.round(t.h)} (габарит), длинная сторона ${Math.round(t.L)}`;
   else{const cw=t.w<a-0.05,ch=t.h<b-0.05;
    key=cw&&ch?`угол ${r1(t.w)}×${r1(t.h)} (отпилить ${r1(a-t.w)} по длине и ${r1(b-t.h)} по ширине)`:
    cw?`${r1(t.w)}×${b} — отпилить ${r1(a-t.w)} мм по длине`:`${a}×${r1(t.h)} — отпилить ${r1(b-t.h)} мм по ширине`}
   grp[key]=(grp[key]||0)+1}
  const tot=tiles.length,rs=n('rs'),need=Math.ceil(tot*(1+rs/100));
  const m2=W*H/1e6;
- let h=`<table><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
+ let h=`<table><tr><td>Плитка</td><td><b>${a}×${b}</b>, поворот ${AN}°</td></tr><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
  <tr><td>Целых плиток</td><td><b>${full}</b></td></tr><tr><td>Подрезанных</td><td><b>${cuts.length}</b></td></tr>
  <tr><td>Всего мест</td><td><b>${tot}</b></td></tr><tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b></td></tr></table>`;
  h+='<h4>Подрезка (размер куска → сколько отпилить)</h4><table>'+Object.entries(grp).map(([k,v])=>`<tr><td>${k}</td><td><b>${v} шт</b></td></tr>`).join('')+'</table>';
@@ -135,7 +157,7 @@ function upd(){
   if(ew<a/3)h+=`<div class="warn">Узкая подрезка у левой/правой стены: ${r1(ew)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(eh<b/3)h+=`<div class="warn">Узкая подрезка у верхней/нижней стены: ${r1(eh)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(sh)h+='<div class="hint">При укладке вразбежку часть подрезок в рядах разная — смотрите подписи на схеме.</div>'}
- else h+='<div class="hint">Диагональ: подрезки — треугольники/трапеции, расход больше; рекомендуется запас 15%.</div>';
+ else h+=`<div class="hint">Поворот ${AN}°: подрезки — косые куски (размер — габарит и длинная сторона), расход больше; рекомендуется запас 15%.</div>`;
  h+='<div class="hint">Красные пунктиры — центральные оси. Размеры на оранжевых кусках — итоговый размер куска в мм.</div>';
  out.innerHTML=h}
 // pan/zoom
