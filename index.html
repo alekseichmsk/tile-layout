@@ -31,12 +31,18 @@ svg{display:block;width:100%;touch-action:none;background:var(--cv)}
 .hint{font-size:12px;color:var(--mu);padding:6px 16px}
 .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 12px}.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:var(--sh)}
 .kpi b{display:block;font-size:24px;color:var(--ac)}.kpi span{font-size:12px;color:var(--mu)}
-.lgi{display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lgi b{background:#fdba74;color:#111827;border-radius:8px;text-align:center;padding:4px 0}.lgi em{font-style:normal;font-weight:700}
+.lgi{display:grid;grid-template-columns:32px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.lgi>b{background:#fdba74;color:#111827;border-radius:8px;text-align:center;padding:4px 0}.lgi em{font-style:normal;font-weight:700}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end}#dlg[hidden]{display:none}
+#dlb{background:var(--card);width:100%;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px;font-size:14px}
+#dlb table{width:100%;border-collapse:collapse}#dlb td{padding:7px 2px;border-bottom:1px solid var(--bd);vertical-align:top}#dlb td:last-child{text-align:right}#dlb h4{margin:14px 0 4px;font-size:13px;color:var(--mu);text-transform:uppercase}
+.dh{display:flex;gap:12px;align-items:center;margin-bottom:10px}.dh button{margin-left:auto;font-size:20px;border:0;background:var(--in);color:var(--tx);border-radius:12px;width:44px;height:44px}
+.badge{background:#fdba74;color:#111827;border-radius:12px;padding:8px 14px;font-size:22px}.mu{color:var(--mu);font-size:13px}
+.seq{font-size:13px;padding:6px 0;border-bottom:1px solid var(--bd);line-height:1.5}.lgi{cursor:pointer}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--bd);z-index:5}
 nav button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--mu);padding:8px 0;border-radius:12px}
 nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-style:normal;font-size:20px}
 </style></head><body>
-<header>Раскладка плитки <small>v6</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
+<header>Раскладка плитки <small>v7</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
 <section class="tab" id="t0"><div id="inp"><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
@@ -62,7 +68,9 @@ nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-sty
 <div class="card" id="lgw"><h4 style="margin-top:0">Подрезка (буквы на чертеже)</h4><div id="lgd"></div></div><div class="hint">Двумя пальцами — масштаб, одним — сдвиг. <span class="lg"><span style="background:#fff"></span>целая<span style="background:#fdba74"></span>подрезка<span style="background:#c7cbd6"></span>отступ</span></div>
 </section><section class="tab" id="t2"><div class="card" id="out"></div></section>
 <nav><button data-t="0"><i>⚙︎</i>Параметры</button><button data-t="1"><i>▦</i>Чертёж</button><button data-t="2"><i>∑</i>Итог</button></nav>
+<div id="dlg" hidden><div id="dlb"></div></div>
 <script>
+window.onerror=(m,u,l)=>{document.title='ERR '+m+' @'+l};
 const $=id=>document.getElementById(id);
 const F=['rl','rw','tl','tw','gj','rs','ot','ob','ol','or','ty'];
 const D={ang:0,rl:4000,rw:3000,tl:600,tw:300,gj:2,rs:10,ot:10,ob:10,ol:10,or:10,ty:'0'};
@@ -101,7 +109,7 @@ function upd(){
  const W=RL-ol-or,H=RW-ot-ob;
  if(!(RL>0&&RW>0&&a>0&&b>0&&W>0&&H>0)){out.innerHTML='<div class="warn">Проверьте размеры: все значения должны быть больше нуля, а отступы — меньше размеров комнаты.</div>';return}
  if((W/(a+g))*(H/(b+g))>20000){out.innerHTML='<div class="warn">Слишком много плиток для отрисовки.</div>';return}
- const diag=AN>0&&AN<90,sh=parseFloat(S.ty)||0,seam=S.cm==='seam';
+ const TA=a,TB=b,diag=AN>0&&AN<90,sh=parseFloat(S.ty)||0,seam=S.cm==='seam';
  const px=a+g,py=b+g,cx=W/2,cy=H/2;
  const ox=seam?g/2:-a/2, oy=seam?g/2:-b/2; // tile start relative to center
  const tiles=[];
@@ -113,7 +121,7 @@ function upd(){
    for(let k=k0;k<=k1;k++){const x=xs+k*px;if(x+a<=0||x>=W)continue;
     const X0=Math.max(0,x),X1=Math.min(W,x+a),Y0=Math.max(0,y),Y1=Math.min(H,y+b);
     if(X1-X0<0.05||Y1-Y0<0.05)continue;
-    tiles.push({p:[[X0,Y0],[X1,Y0],[X1,Y1],[X0,Y1]],w:X1-X0,h:Y1-Y0,cut:(X1-X0<a-0.05||Y1-Y0<b-0.05)})}}
+    tiles.push({row:j,loc:[[X0-x,Y0-y],[X1-x,Y0-y],[X1-x,Y1-y],[X0-x,Y1-y]],p:[[X0,Y0],[X1,Y0],[X1,Y1],[X0,Y1]],w:X1-X0,h:Y1-Y0,cut:(X1-X0<a-0.05||Y1-Y0<b-0.05)})}}
  }else{
   const t=AN*Math.PI/180,co=Math.cos(t),si=Math.sin(t),R=Math.hypot(W,H)/2+Math.max(a,b)*2;
   for(let j=Math.floor((-R-oy)/py)-1;j<=Math.ceil((R-oy)/py)+1;j++){
@@ -124,10 +132,10 @@ function upd(){
    const q=clip(P,0,0,W,H);if(q.length<3)continue;const ar=area(q);if(ar<1)continue;
    const xs=q.map(p=>p[0]),ys=q.map(p=>p[1]);
    let L=0;for(let m=0;m<q.length;m++){const A=q[m],B=q[(m+1)%q.length];L=Math.max(L,Math.hypot(A[0]-B[0],A[1]-B[1]))}
-   tiles.push({p:q,ar,L,cut:ar<a*b*0.999,w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),
+   tiles.push({row:j,loc:q.map(([X,Y])=>{const dx=X-cx,dy=Y-cy;return[dx*co+dy*si-u,-dx*si+dy*co-v]}),p:q,ar,L,cut:ar<a*b*0.999,w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys),
     mx:xs.reduce((p,c)=>p+c)/xs.length,my:ys.reduce((p,c)=>p+c)/ys.length})}}
  }
- if(R90){[a,b]=[b,a];tiles.forEach(t=>{const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);const X0=Math.min(...xs),Y0=Math.min(...ys);t.p=[[X0,Y0],[X0+t.w,Y0],[X0+t.w,Y0+t.h],[X0,Y0+t.h]];t.cut=t.w<a-0.05||t.h<b-0.05})}
+ if(R90){[a,b]=[b,a];tiles.forEach(t=>{const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);const X0=Math.min(...xs),Y0=Math.min(...ys);t.p=[[X0,Y0],[X0+t.w,Y0],[X0+t.w,Y0+t.h],[X0,Y0+t.h]];t.ar=t.w*t.h;t.cut=t.w<a-0.05||t.h<b-0.05})}
  // draw
  const pad=Math.max(RL,RW)*0.16;base=[-pad,-pad,RL+2*pad,RW+2*pad];
  if(!VB||VB.key!==RL+'x'+RW){VB={v:base.slice(),key:RL+'x'+RW}}
@@ -173,33 +181,41 @@ const pxU=base[2]/Math.max(sv.clientWidth||360,280),minF=11*pxU;
  for(const t of tiles){const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);t.cx=xs.reduce((p,c)=>p+c)/xs.length;t.cy=ys.reduce((p,c)=>p+c)/ys.length;
   const pr1=t.p.map(p=>p[0]*D1[0]+p[1]*D1[1]),pr2=t.p.map(p=>p[0]*D2[0]+p[1]*D2[1]);t.e1=Math.max(...pr1)-Math.min(...pr1);t.e2=Math.max(...pr2)-Math.min(...pr2)}
  const full=tiles.filter(t=>!t.cut).length,cuts=tiles.filter(t=>t.cut);
+
  const gm={};
- for(const t of cuts){let key,desc;
-  if(diag){const sides=t.p.length;key=`${Math.round(t.e1)}|${Math.round(t.e2)}|${Math.round(t.ar/500)}`;
-   desc=`${sides==3?'треугольник':sides==4?'четырёхугольник':sides+'-угольник'} ≈${Math.round(t.e1)}×${Math.round(t.e2)} по осям плитки — отмерить ${Math.round(t.e1)} по длине и ${Math.round(t.e2)} по ширине, рез под углом ${AN}°/${90-AN}°; длинная сторона ${Math.round(t.L)}`;
-   t.short=Math.round(t.e1)+'×'+Math.round(t.e2)}
-  else{const cw=t.w<a-0.05,ch=t.h<b-0.05;key=r1(t.w)+'x'+r1(t.h);
-   desc=cw&&ch?`угол ${r1(t.w)}×${r1(t.h)} — отпилить ${r1(a-t.w)} по длине и ${r1(b-t.h)} по ширине`:
-   cw?`${r1(t.w)}×${b} — отпилить ${r1(a-t.w)} мм по длине`:`${a}×${r1(t.h)} — отпилить ${r1(b-t.h)} мм по ширине`;
-   t.short=cw&&ch?Math.round(t.w)+'×'+Math.round(t.h):String(Math.round(cw?t.w:t.h))}
-  (gm[key]=gm[key]||{desc,n:0,ts:[]}).n++;gm[key].ts.push(t)}
- const groups=Object.values(gm).sort((x,y)=>y.n-x.n);
+ for(const t of tiles){if(!t.ar)t.ar=area(t.p)}
+ for(const t of cuts){const A=pieceInfo(t.loc,TA,TB);t.info=A;(gm[A.key]=gm[A.key]||{A,n:0,ts:[]}).n++;gm[A.key].ts.push(t)}
+ const groups=Object.values(gm).sort((x,y)=>y.n-x.n||y.A.area-x.A.area);
  groups.forEach((g,i)=>{g.L=i<26?String.fromCharCode(65+i):'Z'+(i-25);g.ts.forEach(t=>t.g=g.L)});
- const boxes=[];const hit=(b)=>boxes.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]);
- function put(x,y,txt,f,rot,force){const w=txt.length*f*0.62+f*0.3,h=f*1.15;const bb=rot?[x-h/2,y-w/2,x+h/2,y+w/2]:[x-w/2,y-h/2,x+w/2,y+h/2];
-  if(hit(bb)&&!force)return false;boxes.push(bb);
-  const e=el('text',{x,y,'font-size':f,'text-anchor':'middle','dominant-baseline':'central',fill:'#111827',stroke:'#fff','stroke-width':f*0.22,'paint-order':'stroke','font-weight':700},G);e.textContent=txt;
-  if(rot)e.setAttribute('transform',`rotate(-90 ${x} ${y})`);return true}
+ const boxes=[];const hit=(b,B)=>B.some(o=>b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]);
+ function txt(x,y,s,f,rot,cls,pid){const e=el('text',{x,y,'font-size':f,'text-anchor':'middle','dominant-baseline':'central',fill:'#111827',stroke:'#fff','stroke-width':f*0.22,'paint-order':'stroke','font-weight':700,'data-pid':pid,class:cls},G);e.textContent=s;
+  if(rot)e.setAttribute('transform',`rotate(${rot} ${x} ${y})`);return e}
+ function bbox(x,y,s,f,rot){const w=s.length*f*0.62+f*0.3,h=f*1.15;return Math.abs(rot)>45?[x-h/2,y-w/2,x+h/2,y+w/2]:[x-w/2,y-h/2,x+w/2,y+h/2]}
  let ref=null,rd=Infinity;for(const t of tiles)if(!t.cut){const dd=Math.hypot(t.cx-cx,t.cy-cy);if(dd<rd){rd=dd;ref=t}}
  if(ref){const c2=chord(ref.p,[ref.cx,ref.cy],D2),c1=chord(ref.p,[ref.cx,ref.cy],D1);if(c1&&c2){const l1=c1[1]-c1[0],l2=c2[1]-c2[0];
   dimArrow(ref.p,[ref.cx+D2[0]*(-l2*0.25),ref.cy+D2[1]*(-l2*0.25)],D1,l2);dimArrow(ref.p,[ref.cx+D1[0]*(l1*0.25),ref.cy+D1[1]*(l1*0.25)],D2,l1)}}
- const order=cuts.slice().sort((x,y)=>y.ar-x.ar||0);
- for(const t of order){const k=Math.sqrt((t.ar||t.w*t.h)/(t.w*t.h));const bw=t.w*(diag?k*0.75:0.9),bh=t.h*(diag?k*0.75:0.9);
-  const full2=t.g+' '+t.short;let done=false;
-  for(const[txt,force]of[[full2,0],[t.g,0]]){const fh=Math.min(fs,bh/1.15,bw/(txt.length*0.62+0.3)),fv=Math.min(fs,bw/1.15,bh/(txt.length*0.62+0.3));
-   const rot=!diag&&fv>fh*1.1,f=Math.max(fh,fv);if(f<minF)continue;if(put(t.cx,t.cy,txt,f,rot,0)){done=true;break}}
-  if(!done)put(t.cx,t.cy,t.g,minF,false,0)}
- $('lgd').innerHTML=groups.map(g=>`<div class="lgi"><b>${g.L}</b><span>${g.desc}</span><em>${g.n} шт</em></div>`).join('');
+ // letters (overview)
+ const order=cuts.slice().sort((x,y)=>y.ar-x.ar);
+ order.forEach((t,pid)=>{t.pid=pid;const k=Math.sqrt(t.ar/(t.w*t.h));const bw=t.w*(diag?k*0.75:0.9),bh=t.h*(diag?k*0.75:0.9);
+  let f=Math.min(fs,bh/1.15,bw/0.95);if(f<minF)f=minF;const bb=bbox(t.cx,t.cy,t.g,f,0);if(hit(bb,boxes))return;boxes.push(bb);txt(t.cx,t.cy,t.g,f,0,'lt',pid)});
+ // detailed arrows (LOD)
+ const aboxes=[];const AG=el('g',{},G);
+ order.forEach(t=>{const c2=chord(t.p,[t.cx,t.cy],D2),c1=chord(t.p,[t.cx,t.cy],D1);if(!c1||!c2)return;const l1=c1[1]-c1[0],l2=c2[1]-c2[0];
+  const items=[];
+  for(const[d,len,off,od,fr]of[[D1,l1,(c2[0]+c2[1])/2-l2*0.25,D2,0.4],[D2,l2,(c1[0]+c1[1])/2+l1*0.36,D1,0.64]]){
+   const c=[t.cx+od[0]*off,t.cy+od[1]*off],ch=chord(t.p,c,d);if(!ch)return;const L=ch[1]-ch[0];if(L<0.5)return;
+   const label=(items.length?'':t.g+' ')+fm(L);const f=Math.min(fs,L*2*Math.min(fr,1-fr)*0.8/(label.length*0.62+1.2),(d===D1?l2:l1)*0.32);
+   const p1=[c[0]+d[0]*ch[0],c[1]+d[1]*ch[0]],p2=[c[0]+d[0]*ch[1],c[1]+d[1]*ch[1]];
+   let ang=Math.atan2(d[1],d[0])*180/Math.PI;if(ang>90.01)ang-=180;if(ang<=-90.01)ang+=180;
+   const mx=p1[0]+(p2[0]-p1[0])*fr,my=p1[1]+(p2[1]-p1[1])*fr,bb=bbox(mx,my,label,f,ang);
+   if(hit(bb,aboxes))return;items.push({p1,p2,f,label,mx,my,ang,bb})}
+  if(items.length<2)return;items.forEach(o=>aboxes.push(o.bb));
+  const gg=el('g',{class:'ar','data-pid':t.pid,'data-f':Math.min(...items.map(o=>o.f)),style:'display:none'},AG);
+  for(const o of items){el('line',{x1:o.p1[0],y1:o.p1[1],x2:o.p2[0],y2:o.p2[1],stroke:'#123','stroke-width':o.f*0.07,'marker-start':'url(#ah)','marker-end':'url(#ah)'},gg);
+   const e=el('text',{x:o.mx,y:o.my,'font-size':o.f,'text-anchor':'middle','dominant-baseline':'central',fill:'#000',stroke:'#fff','stroke-width':o.f*0.25,'paint-order':'stroke','font-weight':700,transform:`rotate(${o.ang} ${o.mx} ${o.my})`},gg);e.textContent=o.label}});
+ CUR={tiles,cuts,groups,ol,ot,TA,TB,AN};
+ setTimeout(lod);setTimeout(lod,300);$('lgd').innerHTML='<div class="hint" style="padding:0 0 6px">Все размеры точные, округление до 0,5 мм. Размеры куска — по осям плитки: длина (сторона '+TA+') × ширина (сторона '+TB+'). Нажмите на букву или кусок для подробной схемы.</div>'+
+  groups.map(g=>`<div class="lgi" data-g="${g.L}"><b>${g.L}</b><span>${g.A.short}</span><em>${g.n} шт ›</em></div>`).join('');
  el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#e11d48','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  // summary
@@ -211,28 +227,122 @@ const pxU=base[2]/Math.max(sv.clientWidth||360,280),minF=11*pxU;
  let h=`<table><tr><td>Плитка</td><td><b>${a}×${b}</b>, поворот ${AN}°</td></tr><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
  <tr><td>Целых плиток</td><td><b>${full}</b></td></tr><tr><td>Подрезанных</td><td><b>${cuts.length}</b></td></tr>
  <tr><td>Всего мест</td><td><b>${tot}</b></td></tr><tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b></td></tr></table>`;
- h+='<h4>Подрезка — буквы как на чертеже</h4><div class="lgl">'+$('lgd').innerHTML+'</div>';
+ h+='<h4>Подрезка — буквы как на чертеже</h4><div class="lgl">'+$('lgd').innerHTML+'</div>'+positions(tiles,{RL,RW,W,H,ol,or,ot,ob,g,a,b,cx,cy,seam,diag,AN})+verify(tiles,{sh,W,H,g,a,b,cx,cy,diag,TA,TB,RL,RW,ol,or,ot,ob});
  if(!diag){const ew=Math.min(...cuts.filter(t=>t.w<a-0.05).map(t=>t.w),a),eh=Math.min(...cuts.filter(t=>t.h<b-0.05).map(t=>t.h),b);
   if(ew<a/3)h+=`<div class="warn">Узкая подрезка у левой/правой стены: ${r1(ew)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(eh<b/3)h+=`<div class="warn">Узкая подрезка у верхней/нижней стены: ${r1(eh)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(sh)h+='<div class="hint">При укладке вразбежку часть подрезок в рядах разная — смотрите буквы на чертеже.</div>'}
- else h+=`<div class="hint">Поворот ${AN}°: подрезки — косые куски (размер — габарит и длинная сторона), расход больше; рекомендуется запас 15%.</div>`;
+ else h+=`<div class="hint">Поворот ${AN}°: подрезки — косые куски, точная схема каждого — по нажатию на букву; расход больше; рекомендуется запас 15%.</div>`;
  h+='<div class="hint">Красные пунктиры — центральные оси. Оранжевые куски помечены буквой (и размером, если помещается) — расшифровка в списке. Стрелки на целой плитке у центра — эталонный размер.</div>';
  out.innerHTML=h}
+let CUR=null;
+const fm=v=>{let r=Math.round(v*2)/2;if(Object.is(r,-0))r=0;return String(r).replace('.',',')};
+document.addEventListener('click',e=>{const x=e.target.closest('.lgi');if(x)detail(x.dataset.g)});
+function pieceInfo(loc,TA,TB){
+ const E=0.01;let P=[];for(const p of loc){const q=[Math.abs(p[0])<E?0:Math.abs(p[0]-TA)<E?TA:p[0],Math.abs(p[1])<E?0:Math.abs(p[1]-TB)<E?TB:p[1]];
+  if(!P.length||Math.hypot(q[0]-P[P.length-1][0],q[1]-P[P.length-1][1])>E)P.push(q)}
+ if(P.length>1&&Math.hypot(P[0][0]-P[P.length-1][0],P[0][1]-P[P.length-1][1])<E)P.pop();
+ // drop collinear
+ P=P.filter((p,i)=>{const a=P[(i+P.length-1)%P.length],c=P[(i+1)%P.length];return Math.abs((p[0]-a[0])*(c[1]-a[1])-(p[1]-a[1])*(c[0]-a[0]))>1e-3*Math.hypot(c[0]-a[0],c[1]-a[1])});
+ if(area(P)<0)P.reverse();
+ const norm=Q=>{let si=0;Q.forEach((p,i)=>{if(p[1]<Q[si][1]-E||(Math.abs(p[1]-Q[si][1])<E&&p[0]<Q[si][0]))si=i});return Q.slice(si).concat(Q.slice(0,si))};
+ const P1=norm(P),P2=norm(P.map(p=>[TA-p[0],TB-p[1]])),k1=P1.map(p=>fm(p[0])+':'+fm(p[1])).join('|'),k2=P2.map(p=>fm(p[0])+':'+fm(p[1])).join('|');
+ P=k1<=k2?P1:P2;const sgn=area(P)
+ 
+ const desc=p=>{const[u,v]=p;
+  if(u===0&&v===0)return'угол 1';if(u===TA&&v===0)return'угол 2';if(u===TA&&v===TB)return'угол 3';if(u===0&&v===TB)return'угол 4';
+  if(v===0)return`на стороне 1–2, ${fm(u)} мм от угла 1 (${fm(TA-u)} от угла 2)`;
+  if(u===TA)return`на стороне 2–3, ${fm(v)} мм от угла 2 (${fm(TB-v)} от угла 3)`;
+  if(v===TB)return`на стороне 4–3, ${fm(u)} мм от угла 4 (${fm(TA-u)} от угла 3)`;
+  if(u===0)return`на стороне 1–4, ${fm(v)} мм от угла 1 (${fm(TB-v)} от угла 4)`;
+  return`внутри плитки: ${fm(u)} мм от угла 1 вдоль стороны 1–2 и ${fm(v)} мм вдоль стороны 1–4`};
+ const onB=(p,q)=>(p[1]===0&&q[1]===0)||(p[1]===TB&&q[1]===TB)||(p[0]===0&&q[0]===0)||(p[0]===TA&&q[0]===TA);
+ const V=P.map((p,i)=>{const a=P[(i+P.length-1)%P.length],c=P[(i+1)%P.length];
+  const ang=Math.abs(Math.atan2((a[0]-p[0])*(c[1]-p[1])-(a[1]-p[1])*(c[0]-p[0]),(a[0]-p[0])*(c[0]-p[0])+(a[1]-p[1])*(c[1]-p[1])))*180/Math.PI;
+  return{p,d:desc(p),ang}});
+ const Ed=P.map((p,i)=>{const q=P[(i+1)%P.length];return{i,j:(i+1)%P.length,len:Math.hypot(q[0]-p[0],q[1]-p[1]),cut:!onB(p,q)}});
+ const rect=P.length===4&&P.every(p=>P.filter(q=>q[0]===p[0]).length===2&&P.filter(q=>q[1]===p[1]).length===2);
+ const us=P.map(p=>p[0]),vs=P.map(p=>p[1]),du=Math.max(...us)-Math.min(...us),dv=Math.max(...vs)-Math.min(...vs);
+ const ar=area(P);let short;const key=rect?'R'+fm(du)+'x'+fm(dv):P.map(p=>fm(p[0])+':'+fm(p[1])).join('|');
+ if(rect){const cu=TA-du,cv=TB-dv;short=`<b>${fm(du)}×${fm(dv)}</b> мм`+(cu>0.25?` — отрезать ${fm(cu)} по длине`:'')+(cv>0.25?`${cu>0.25?' и':' — отрезать'} ${fm(cv)} по ширине`:'')}
+ else short=`${P.length}-угольник, стороны ${Ed.map(e=>fm(e.len)).join(' / ')} мм; резов: ${Ed.filter(e=>e.cut).length}`;
+ return{key,P,V,Ed,rect,du,dv,area:ar,short,TA,TB}}
+function detail(Lt){const g=CUR.groups.find(x=>x.L===Lt);if(!g)return;const A=g.A,TA=A.TA,TB=A.TB;
+ const m=Math.max(TA,TB)*0.2,vw=TA+2*m,vh=TB+2*m,f=Math.max(TA,TB)*0.045;
+ let sv=`<svg viewBox="${-m} ${-m} ${vw} ${vh}" style="width:100%;background:var(--cv);border-radius:12px;touch-action:auto"><defs><pattern id="hz" width="${f}" height="${f}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="${f}" stroke="#94a3b8" stroke-width="${f*0.25}"/></pattern></defs>`;
+ sv+=`<rect x="0" y="0" width="${TA}" height="${TB}" fill="url(#hz)" stroke="#64748b" stroke-width="${f*0.08}" stroke-dasharray="${f*0.4} ${f*0.25}"/>`;
+ sv+=`<polygon points="${A.P.map(p=>p.join(',')).join(' ')}" fill="#fdba74" stroke="#111827" stroke-width="${f*0.08}"/>`;
+ A.Ed.forEach(e=>{const p=A.P[e.i],q=A.P[e.j];if(e.cut)sv+=`<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#e11d48" stroke-width="${f*0.22}"/>`});
+ const C=[[0,0,'1'],[TA,0,'2'],[TA,TB,'3'],[0,TB,'4']];C.forEach(([x,y,t])=>{sv+=`<circle cx="${x+(x?1:-1)*f*0.9}" cy="${y+(y?1:-1)*f*0.9}" r="${f*0.7}" fill="#1e293b"/><text x="${x+(x?1:-1)*f*0.9}" y="${y+(y?1:-1)*f*0.9}" font-size="${f}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="700">${t}</text>`});
+ const ccx=A.P.reduce((s,p)=>s+p[0],0)/A.P.length,ccy=A.P.reduce((s,p)=>s+p[1],0)/A.P.length;
+ A.Ed.forEach(e=>{const p=A.P[e.i],q=A.P[e.j],mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2;let nx=-(q[1]-p[1]),ny=q[0]-p[0];const l=Math.hypot(nx,ny)||1;nx/=l;ny/=l;if((ccx-mx)*nx+(ccy-my)*ny>0){nx=-nx;ny=-ny}
+  let an=Math.atan2(q[1]-p[1],q[0]-p[0])*180/Math.PI;if(an>90)an-=180;if(an<-90)an+=180;const tx=mx-nx*f*0.9,ty=my-ny*f*0.9;
+  sv+=`<text x="${tx}" y="${ty}" font-size="${f}" text-anchor="middle" dominant-baseline="central" font-weight="700" fill="${e.cut?'#be123c':'#111827'}" stroke="#fff" stroke-width="${f*0.2}" paint-order="stroke" transform="rotate(${an} ${tx} ${ty})">${fm(e.len)}</text>`});
+ A.P.forEach((p,i)=>{sv+=`<circle cx="${p[0]}" cy="${p[1]}" r="${f*0.25}" fill="#2563eb"/><text x="${p[0]+(p[0]<ccx?1:-1)*f*0.9}" y="${p[1]+(p[1]<ccy?1:-1)*f*0.9}" font-size="${f*0.85}" fill="#2563eb" font-weight="700" text-anchor="middle" dominant-baseline="central">P${i+1}</text>`});
+ sv+='</svg>';
+ let h=`<div class="dh"><b class="badge">${g.L}</b><div><div style="font-weight:700;font-size:18px">Кусок ${g.L} — ${g.n} шт</div><div class="mu">Плитка ${TA}×${TB} мм${CUR.AN?`, уложена с поворотом ${CUR.AN}° по часовой`:''}</div></div><button onclick="$('dlg').hidden=true">✕</button></div>${sv}
+ <div class="mu" style="margin:8px 0">Оранжевое — оставить (кладётся на пол), штриховка — отход. Красные линии — резы. Угол 1 — верхний левый угол плитки, сторона 1–2 — длинная (${TA} мм), сторона 1–4 — короткая (${TB} мм). Все размеры точные, округление до 0,5 мм.</div>`;
+ h+=`<h4>${A.rect?'Размер':'Габарит (наибольший размер по осям плитки)'}</h4><table><tr><td>По длине (вдоль 1–2)</td><td><b>${fm(A.du)} мм</b> (отход ${fm(TA-A.du)})</td></tr><tr><td>По ширине (вдоль 1–4)</td><td><b>${fm(A.dv)} мм</b> (отход ${fm(TB-A.dv)})</td></tr><tr><td>Площадь куска</td><td><b>${(A.area/100).toFixed(1).replace('.',',')} см²</b> из ${(TA*TB/100).toFixed(1).replace('.',',')}</td></tr></table>`;
+ h+=`<h4>Резы — разметка от углов плитки</h4><table>`+A.Ed.filter(e=>e.cut).map((e,k)=>`<tr><td colspan="2" style="text-align:left"><b>Рез ${k+1}</b> (длина ${fm(e.len)} мм):<br>от P${e.i+1} — ${A.V[e.i].d}<br>до P${e.j+1} — ${A.V[e.j].d}</td></tr>`).join('')+'</table>';
+ h+=`<h4>Вершины и углы</h4><table>`+A.V.map((v,i)=>`<tr><td><b>P${i+1}</b>: ${v.d}</td><td>${(Math.round(v.ang*10)/10).toString().replace('.',',')}°</td></tr>`).join('')+'</table>';
+ h+=`<h4>Стороны куска</h4><table>`+A.Ed.map(e=>`<tr><td>P${e.i+1}–P${e.j+1} ${e.cut?'<span style="color:#be123c">(рез)</span>':'(заводская кромка)'}</td><td><b>${fm(e.len)} мм</b></td></tr>`).join('')+'</table>';
+ $('dlb').innerHTML=h;$('dlg').hidden=false;$('dlb').scrollTop=0}
+function rowsOf(tiles,ax){// scan lines: ax=1 horizontal lines (rows), ax=0 vertical lines
+ const P=ax?1:0,Sx=ax?0:1,m=new Map();
+ for(const t of tiles){const vs=t.p.map(p=>p[P]);const pos=Math.min(...vs)+(Math.max(...vs)-Math.min(...vs))*0.37,k=Math.round(pos*1000);if(!m.has(k))m.set(k,pos)}
+ return[...m.values()].sort((x,y)=>x-y).map(pos=>{const r=tiles.filter(t=>{const vs=t.p.map(p=>p[P]);return Math.min(...vs)<pos&&Math.max(...vs)>pos}).map(t=>{const xs=t.p.map(p=>p[Sx]);return[Math.min(...xs),Math.max(...xs),t]}).sort((x,y)=>x[0]-y[0]);r.pos=pos;return r})}
+function seqStr(r,o1,o2,g,full){let parts=[`стена | отступ ${fm(o1)}`],cnt=0;
+ const flush=()=>{if(cnt){parts.push(`шов ${fm(g)} + плитка ${fm(full)}`+(cnt>1?` ×${cnt}`:''));cnt=0}};
+ r.forEach(([x0,x1,t],i)=>{const w=x1-x0;if(i&&Math.abs(w-full)<0.01){cnt++;return}flush();parts.push((i?`шов ${fm(r[i][0]-r[i-1][1])} + `:'')+(Math.abs(w-full)<0.01?`плитка ${fm(w)}`:`<b>${t.g||''} ${fm(w)}</b>`))});flush();parts.push(`отступ ${fm(o2)} | стена`);return parts.join(' → ')}
+function positions(tiles,c){let h='<h4>Положение на полу (точно, мм)</h4><table>';
+ const sx=c.ol+c.cx,sy=c.ot+c.cy;
+ if(c.seam)h+=`<tr><td>Центральный вертикальный шов</td><td>ось ${fm(sx)} от левой стены, ${fm(c.RL-sx)} от правой; кромки шва ${fm(sx-c.g/2)} и ${fm(sx+c.g/2)} от левой</td></tr><tr><td>Центральный горизонтальный шов</td><td>ось ${fm(sy)} от верхней стены, ${fm(c.RW-sy)} от нижней; кромки ${fm(sy-c.g/2)} и ${fm(sy+c.g/2)} от верхней</td></tr>`;
+ else h+=`<tr><td>Центр центральной плитки</td><td>${fm(sx)} от левой, ${fm(c.RL-sx)} от правой, ${fm(sy)} от верхней, ${fm(c.RW-sy)} от нижней стены</td></tr>`;
+ if(c.diag){h+=`<tr><td>Швы</td><td>сетка повёрнута на ${c.AN}° по часовой вокруг этой точки; шаг ${fm(c.a+c.g)} вдоль длины и ${fm(c.b+c.g)} вдоль ширины</td></tr></table>`;return h}
+ h+='</table>';
+ const uniq=(rs,ax)=>{const m=new Map();rs.forEach((r,i)=>{const s=seqStr(r,ax?c.ol:c.ot,ax?c.or:c.ob,c.g,ax?c.a:c.b);(m.get(s)||m.set(s,[]).get(s)).push(ax?i+1:fm((ax?c.ot:c.ol)+r.pos))});return m};
+ const R=rowsOf(tiles,1),Cc=rowsOf(tiles,0);
+ h+='<div class="mu">Ряды (сверху вниз), слева направо:</div>';for(const[s,ids]of uniq(R,1))h+=`<div class="seq"><b>Ряды ${ids.join(', ')}:</b> ${s}</div>`;
+ h+='<div class="mu">По вертикали сверху вниз (линия на X мм от левой стены):</div>';for(const[s,ids]of uniq(Cc,0))h+=`<div class="seq"><b>X = ${ids.length>4?ids.slice(0,3).join(', ')+' … ('+ids.length+' линий)':ids.join(', ')}:</b> ${s}</div>`;
+ return h}
+function verify(tiles,c){const res=[];const ok=(n,b,d)=>res.push([n,b,d]);const T=1e-6;
+ if(!c.diag){for(const ax of[1,0]){const rs=rowsOf(tiles,ax),tot=ax?c.RL:c.RW,o1=ax?c.ol:c.ot,o2=ax?c.or:c.ob;let bad=0,gapBad=0;
+  for(const r of rs){let s=o1+o2;r.forEach(([x0,x1],i)=>{s+=x1-x0;if(i){const gp=x0-r[i-1][1];s+=gp;if(Math.abs(gp-c.g)>T)gapBad++}});if(Math.abs(r[0][0])>T||Math.abs(r[r.length-1][1]-(ax?c.W:c.H))>T)bad++;if(Math.abs(s-tot)>T)bad++}
+  ok(`${ax?'Каждый ряд (горизонталь)':'Каждая вертикаль'}: отступ + плитки + швы + куски + отступ = ${tot} мм (${rs.length} линий)`,!bad,bad?bad+' ошибок':'');
+  ok(`${ax?'По горизонтали':'По вертикали'}: все швы ровно ${fm(c.g)} мм`,!gapBad,'')}}
+ if(c.diag){let miss=0;const key=t=>Math.round(t.cx*100)+','+Math.round(t.cy*100);const set=new Map(tiles.map(t=>[key(t),t]));
+  for(const t of tiles){const m=set.get(Math.round((2*c.cx-t.cx)*100)+','+Math.round((2*c.cy-t.cy)*100));if(!m||Math.abs(m.ar-t.ar)>0.01)miss++}
+  ok('Симметрия относительно центра: у каждого куска есть равный напротив',!miss,miss?miss+' без пары':'')}
+ else for(const ax of[1,0]){let bad=0;const rs=rowsOf(tiles,ax);for(const r of rs){const l=r[0][1]-r[0][0],q=r[r.length-1][1]-r[r.length-1][0];if(Math.abs(l-q)>T)bad++}
+  ok(ax?'На каждой горизонтали подрезка у левой и правой стены одинаковая':'На каждой вертикали подрезка у верхней и нижней стены одинаковая',bad?(c.sh>0.3&&c.sh<0.34?'w':false):true,bad?`${bad} из ${rs.length} не равны${c.sh?' — при смещении 1/3 соседние ряды сдвинуты на 1/3 и 2/3, поэтому слева и справа куски разные (это свойство раскладки, не ошибка расчёта); для полной симметрии выберите «Прямая» или «1/2»':''}`:'')}
+ let outB=0;for(const t of tiles)for(const p of t.loc)if(p[0]<-0.01||p[1]<-0.01||p[0]>c.TA+0.01||p[1]>c.TB+0.01)outB++;
+ ok('Каждый кусок лежит в пределах своей плитки',!outB,'');
+ let outR=0;for(const t of tiles)for(const p of t.p)if(p[0]<-T||p[1]<-T||p[0]>c.W+T||p[1]>c.H+T)outR++;ok('Все куски внутри рабочей площади',!outR,'');
+ const sumA=tiles.reduce((s,t)=>s+t.ar,0);ok(`Площадь плитки ${fm(sumA/100)} см² ≤ рабочей ${fm(c.W*c.H/100)} см² (остальное — швы)`,sumA<=c.W*c.H+1,'');
+ const allOk=res.every(r=>r[1]!==false);
+ return`<h4>Автопроверка расчёта ${allOk?'✅':'❌'}</h4><table>`+res.map(([n,b,d])=>`<tr><td>${n}${b==='w'?'<br><span class=mu>'+d+'</span>':''}</td><td>${b===true?'✅':b==='w'?'⚠️':'❌ '+d}</td></tr>`).join('')+'</table>'}
+function lod(){if(!VB)return;const s=toSvg(0,0)[2];const on=new Set();
+ document.querySelectorAll('#sv .ar').forEach(g=>{const v=g.dataset.f/s>=11;g.style.display=v?'':'none';if(v)on.add(g.dataset.pid)});
+ document.querySelectorAll('#sv .lt').forEach(t=>t.style.display=on.has(t.dataset.pid)?'none':'')}
+
 // pan/zoom
 const sv=$('sv'),pts=new Map();let last=null;
 function toSvg(x,y){const r=sv.getBoundingClientRect(),v=VB.v,s=Math.max(v[2]/r.width,v[3]/r.height);
  return[v[0]+(x-r.left-(r.width-v[2]/s)/2)*s,v[1]+(y-r.top-(r.height-v[3]/s)/2)*s,s]}
-sv.addEventListener('pointerdown',e=>{sv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);last=null});
+let TP=null;sv.addEventListener('pointerdown',e=>{TP=pts.size?null:[e.clientX,e.clientY];sv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);last=null});
 sv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const pr=pts.get(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);
  const v=VB.v;if(pts.size===1){const s=toSvg(0,0)[2];v[0]-=(e.clientX-pr[0])*s;v[1]-=(e.clientY-pr[1])*s}
  else if(pts.size===2){const[p1,p2]=[...pts.values()],d=Math.hypot(p1[0]-p2[0],p1[1]-p2[1]),m=[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2];
   if(last){zoom(m,last.d/d);const s=toSvg(0,0)[2];v[0]-=(m[0]-last.m[0])*s;v[1]-=(m[1]-last.m[1])*s}last={d,m}}
- sv.setAttribute('viewBox',v.join(' '))});
-const up=e=>{pts.delete(e.pointerId);last=null};sv.addEventListener('pointerup',up);sv.addEventListener('pointercancel',up);
+ sv.setAttribute('viewBox',v.join(' '));lod()});
+const up=e=>{if(TP&&pts.size===1&&Math.hypot(e.clientX-TP[0],e.clientY-TP[1])<8&&CUR){const[x,y]=toSvg(e.clientX,e.clientY),X=x-CUR.ol,Y=y-CUR.ot;const t=CUR.cuts.find(t=>inPoly([X,Y],t.p));if(t)detail(t.g)}TP=null;pts.delete(e.pointerId);last=null};
+function inPoly(p,q){let c=false;for(let i=0,j=q.length-1;i<q.length;j=i++){const a=q[i],b=q[j];if((a[1]>p[1])!=(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c}sv.addEventListener('pointerup',up);sv.addEventListener('pointercancel',up);
 function zoom(m,f){const v=VB.v,[x,y]=toSvg(m[0],m[1]);f=Math.max(Math.min(f,base[2]*1.5/v[2]),40/v[2]);
  v[0]=x-(x-v[0])*f;v[1]=y-(y-v[1])*f;v[2]*=f;v[3]*=f}
-sv.addEventListener('wheel',e=>{e.preventDefault();zoom([e.clientX,e.clientY],e.deltaY>0?1.15:0.87);sv.setAttribute('viewBox',VB.v.join(' '))},{passive:false});
-$('zr').onclick=()=>{VB.v=base.slice();sv.setAttribute('viewBox',VB.v.join(' '))};
+sv.addEventListener('wheel',e=>{e.preventDefault();zoom([e.clientX,e.clientY],e.deltaY>0?1.15:0.87);sv.setAttribute('viewBox',VB.v.join(' '));lod()},{passive:false});
+$('zr').onclick=()=>{VB.v=base.slice();sv.setAttribute('viewBox',VB.v.join(' '));lod()};
 addEventListener('resize',upd);tab(TAB);
+if(Q.has('z')){const r=sv.getBoundingClientRect();zoom([r.left+r.width*(+Q.get('zx')||0.15),r.top+r.height*(+Q.get('zy')||0.2)],1/+Q.get('z'));sv.setAttribute('viewBox',VB.v.join(' '));lod();setTimeout(lod,400)}
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>lod()).observe(sv);
+if(Q.has('d'))detail(Q.get('d'));
 </script></body></html>
