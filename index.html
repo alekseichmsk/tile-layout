@@ -24,7 +24,7 @@ svg{display:block;width:100%;touch-action:none;background:#e9e3d6}
 .lg span{display:inline-block;width:14px;height:14px;vertical-align:middle;margin:0 4px 0 8px;border:1px solid #666}
 .hint{font-size:12px;color:#777;padding:4px 10px}
 </style></head><body>
-<header>Раскладка плитки — шов по центру <small style="opacity:.6;font-size:11px">v2</small></header>
+<header>Раскладка плитки — шов по центру <small style="opacity:.6;font-size:11px">v4</small></header>
 <details id="inp" open><summary>Параметры (мм)</summary><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
@@ -112,30 +112,56 @@ function upd(){
  }
  if(R90){[a,b]=[b,a];tiles.forEach(t=>{const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);const X0=Math.min(...xs),Y0=Math.min(...ys);t.p=[[X0,Y0],[X0+t.w,Y0],[X0+t.w,Y0+t.h],[X0,Y0+t.h]];t.cut=t.w<a-0.05||t.h<b-0.05})}
  // draw
- const pad=Math.max(RL,RW)*0.03;base=[-pad,-pad,RL+2*pad,RW+2*pad];
+ const pad=Math.max(RL,RW)*0.16;base=[-pad,-pad,RL+2*pad,RW+2*pad];
  if(!VB||VB.key!==RL+'x'+RW){VB={v:base.slice(),key:RL+'x'+RW}}
  sv.setAttribute('viewBox',VB.v.join(' '));
- sv.style.height=Math.min(innerHeight*0.65,sv.clientWidth*RW/RL+20||400)+'px';
+ sv.style.height=Math.min(innerHeight*0.65,sv.clientWidth*base[3]/base[2]||400)+'px';
  const sc=Math.max(RL,RW)/1000;
  el('rect',{x:0,y:0,width:RL,height:RW,fill:'#cfd8dc',stroke:'#333','stroke-width':4*sc},sv);
+ const df=Math.max(RL,RW)*0.03,dk='#1d3557';
+ const dm=el('defs',{},sv),m2k=el('marker',{id:'dh',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},dm);
+ m2k.setAttribute('markerWidth',df*0.5);m2k.setAttribute('markerHeight',df*0.5);el('path',{d:'M0,0L10,5L0,10z',fill:dk},m2k);
+ function dim(x1,y1,x2,y2,txt,side){const L=Math.hypot(x2-x1,y2-y1);if(L<=0)return;const vert=x1===x2;
+  el('line',{x1,y1,x2,y2,stroke:dk,'stroke-width':df*0.06,'marker-start':L>df?'url(#dh)':'','marker-end':L>df?'url(#dh)':''},sv);
+  // extension ticks
+  for(const[x,y]of[[x1,y1],[x2,y2]])el('line',Object.assign(vert?{x1:x-df*0.3,y1:y,x2:x+df*0.3,y2:y}:{x1:x,y1:y-df*0.3,x2:x,y2:y+df*0.3},{stroke:dk,'stroke-width':df*0.06}),sv);
+  let mx=(x1+x2)/2,my=(y1+y2)/2;const small=L<df*txt.length*0.7;
+  if(vert){mx-=df*0.45*side;if(small)my=side>0?y1-df*1.2:y2+df*1.2}else{my-=df*0.45*side;if(small)mx=side>0?x1-df*1.2:x2+df*1.2}
+  const e=el('text',{x:mx,y:my,'font-size':df,'text-anchor':'middle','dominant-baseline':'central',fill:dk,'font-weight':600},sv);e.textContent=txt;
+  if(vert)e.setAttribute('transform',`rotate(-90 ${mx} ${my})`)}
+ const o1=pad*0.35,o2=pad*0.75;
+ dim(0,-o2,RL,-o2,String(RL),1);
+ dim(0,-o1,ol,-o1,String(ol),1);dim(ol,-o1,RL-or,-o1,String(r1(W)),1);dim(RL-or,-o1,RL,-o1,String(or),-1);
+ dim(-o2,0,-o2,RW,String(RW),1);
+ dim(-o1,0,-o1,ot,String(ot),1);dim(-o1,ot,-o1,RW-ob,String(r1(H)),1);dim(-o1,RW-ob,-o1,RW,String(ob),-1);
+ dim(RL+o1,0,RL+o1,ot,String(ot),-1);dim(RL+o1,RW-ob,RL+o1,RW,String(ob),-1);
+ dim(0,RW+o1,ol,RW+o1,String(ol),-1);dim(RL-or,RW+o1,RL,RW+o1,String(or),-1);
  const G=el('g',{transform:`translate(${ol},${ot})`},sv);
  el('rect',{x:0,y:0,width:W,height:H,fill:'#9e9e9e'},G);
  const fs=Math.max(Math.min(a,b)*0.22,Math.max(RL,RW)*0.024);
  for(const t of tiles){el('polygon',{points:t.p.map(p=>p.join(',')).join(' '),fill:t.cut?'#f4a261':'#fafafa',stroke:'#777','stroke-width':0.6*sc},G)}
- const fmin=Math.max(RL,RW)*0.0035;
- for(const t of tiles){if(!t.cut)continue;let mx,my,opts,bw,bh;
-  if(diag){mx=t.mx;my=t.my;opts=[String(Math.round(t.L))];
-   // inscribed-ish box: shrink by area ratio
-   const k=Math.sqrt(t.ar/(t.w*t.h))*0.6;bw=t.w*k;bh=t.h*k}
-  else{mx=t.p[0][0]+t.w/2;my=t.p[0][1]+t.h/2;bw=t.w;bh=t.h;const cw=t.w<a-0.05,ch=t.h<b-0.05;
-   opts=cw&&ch?[`${r1(t.w)}×${r1(t.h)}`,`${Math.round(t.w)}×${Math.round(t.h)}`]:[String(r1(cw?t.w:t.h)),String(Math.round(cw?t.w:t.h))]}
-  let best=null;
-  for(const tx of opts){const L=tx.length*0.6;
-   const fh=Math.min(fs,bh*0.7,bw*0.88/L),fv=Math.min(fs,bw*0.7,bh*0.88/L);
-   const c={tx,f:Math.max(fh,fv),v:fv>fh*1.05};if(!best||c.f>best.f*1.2)best=c;if(c.f>=fs*0.6)break}
-  if(best.f<fmin)continue;
-  const e=el('text',{x:mx,y:my,'font-size':best.f,'text-anchor':'middle','dominant-baseline':'central',fill:'#000'},G);e.textContent=best.tx;
-  if(best.v)e.setAttribute('transform',`rotate(-90 ${mx} ${my})`)}
+ const fmin=Math.max(RL,RW)*0.004,ANr=diag?AN*Math.PI/180:0,D1=[Math.cos(ANr),Math.sin(ANr)],D2=[-D1[1],D1[0]];
+ const defs=el('defs',{},sv);const mk=el('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse',markerUnits:'strokeWidth'},defs);el('path',{d:'M0,0L10,5L0,10z',fill:'#123'},mk);
+ function chord(q,c,d){let lo=Infinity,hi=-Infinity;for(let m=0;m<q.length;m++){const A=q[m],B=q[(m+1)%q.length],ex=B[0]-A[0],ey=B[1]-A[1];
+   const den=d[0]*ey-d[1]*ex;if(Math.abs(den)<1e-9)continue;const t=((A[0]-c[0])*ey-(A[1]-c[1])*ex)/den,u=((A[0]-c[0])*d[1]-(A[1]-c[1])*d[0])/den;
+   if(u>=-1e-6&&u<=1+1e-6){lo=Math.min(lo,t);hi=Math.max(hi,t)}}return hi>lo?[lo,hi]:null}
+ function dimArrow(q,c,d,other){const ch=chord(q,c,d);if(!ch)return;const L=ch[1]-ch[0];if(L<1)return;
+  const txt=String(Math.round(L));const f=Math.min(fs,L*0.6/(txt.length*0.6+0.6),other*0.4);if(f<fmin)return;
+  const p1=[c[0]+d[0]*ch[0],c[1]+d[1]*ch[0]],p2=[c[0]+d[0]*ch[1],c[1]+d[1]*ch[1]];
+  el('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1],stroke:'#123','stroke-width':f*0.07,'marker-start':'url(#ah)','marker-end':'url(#ah)'},G);
+  let ang=Math.atan2(d[1],d[0])*180/Math.PI;if(ang>90.01)ang-=180;if(ang<=-90.01)ang+=180;
+  const mx=(p1[0]+p2[0])/2,my=(p1[1]+p2[1])/2;
+  const e=el('text',{x:mx,y:my,'font-size':f,'text-anchor':'middle','dominant-baseline':'central',fill:'#000',stroke:'#fff','stroke-width':f*0.25,'paint-order':'stroke','font-weight':600,transform:`rotate(${ang} ${mx} ${my})`},G);e.textContent=txt}
+ let ref=null,rd=Infinity;
+ for(const t of tiles){const xs=t.p.map(p=>p[0]),ys=t.p.map(p=>p[1]);t.cx=xs.reduce((p,c)=>p+c)/xs.length;t.cy=ys.reduce((p,c)=>p+c)/ys.length;
+  if(!t.cut){const dd=Math.hypot(t.cx-cx,t.cy-cy);if(dd<rd){rd=dd;ref=t}}}
+ for(const t of tiles){if(!t.cut&&t!==ref)continue;
+  const c2=chord(t.p,[t.cx,t.cy],D2),c1=chord(t.p,[t.cx,t.cy],D1);if(!c1||!c2)continue;
+  const l1=c1[1]-c1[0],l2=c2[1]-c2[0];
+  // arrow along D1 shifted along D2 by 25% of l2, and vice versa
+  const s2=(c2[0]+c2[1])/2-l2*0.25,s1=(c1[0]+c1[1])/2+l1*0.25;
+  dimArrow(t.p,[t.cx+D2[0]*s2,t.cy+D2[1]*s2],D1,l2);
+  dimArrow(t.p,[t.cx+D1[0]*s1,t.cy+D1[1]*s1],D2,l1)}
  el('line',{x1:cx,y1:-ot,x2:cx,y2:H+ob,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  el('line',{x1:-ol,y1:cy,x2:W+or,y2:cy,stroke:'#d00','stroke-width':3*sc,'stroke-dasharray':`${20*sc} ${10*sc}`},G);
  // summary
@@ -158,7 +184,7 @@ function upd(){
   if(eh<b/3)h+=`<div class="warn">Узкая подрезка у верхней/нижней стены: ${r1(eh)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(sh)h+='<div class="hint">При укладке вразбежку часть подрезок в рядах разная — смотрите подписи на схеме.</div>'}
  else h+=`<div class="hint">Поворот ${AN}°: подрезки — косые куски (размер — габарит и длинная сторона), расход больше; рекомендуется запас 15%.</div>`;
- h+='<div class="hint">Красные пунктиры — центральные оси. Размеры на оранжевых кусках — итоговый размер куска в мм.</div>';
+ h+='<div class="hint">Красные пунктиры — центральные оси. Стрелки — размеры куска в мм по осям плитки; на одной целой плитке у центра — эталонный размер. Мелкие куски без подписи есть в списке.</div>';
  out.innerHTML=h}
 // pan/zoom
 const sv=$('sv'),pts=new Map();let last=null;
