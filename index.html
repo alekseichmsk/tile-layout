@@ -24,7 +24,7 @@ input[type=range]{width:100%;accent-color:var(--ac);height:40px}
 #wrap{overflow:hidden;position:relative}
 svg{display:block;width:100%;touch-action:none;background:var(--cv)}
 #zr{position:absolute;right:10px;top:10px;font:inherit;font-size:13px;font-weight:600;padding:8px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);box-shadow:var(--sh)}
-.card table{width:100%;border-collapse:collapse}.card td{padding:8px 2px;border-bottom:1px solid var(--bd)}.card td:last-child{text-align:right;white-space:nowrap}
+.card table{width:100%;border-collapse:collapse}.card td{padding:8px 2px;border-bottom:1px solid var(--bd)}.card td:last-child{text-align:right}
 .card h4{margin:14px 0 4px;font-size:13px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
 .warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);padding:10px 12px;margin:10px 0;border-radius:12px;font-size:14px}
 .lg span{display:inline-block;width:12px;height:12px;vertical-align:middle;margin:0 4px 0 10px;border-radius:3px;border:1px solid var(--bd)}
@@ -38,12 +38,15 @@ svg{display:block;width:100%;touch-action:none;background:var(--cv)}
 .dh{display:flex;gap:12px;align-items:center;margin-bottom:10px}.dh button{margin-left:auto;font-size:20px;border:0;background:var(--in);color:var(--tx);border-radius:12px;width:44px;height:44px}
 .badge{background:#fdba74;color:#111827;border-radius:12px;padding:8px 14px;font-size:22px}.mu{color:var(--mu);font-size:13px}
 .seq{font-size:13px;padding:6px 0;border-bottom:1px solid var(--bd);line-height:1.5}.lgi{cursor:pointer}
+.rr{display:flex;gap:8px;margin:6px 0}.rr select,.rr input{flex:1;min-width:0}.rr button{font:inherit;font-weight:600;font-size:14px;border:0;border-radius:12px;padding:10px 12px;background:var(--ac2);color:var(--ac);white-space:nowrap}
+.cm{display:flex;flex-direction:row;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px}.cm input{width:24px;height:24px;flex:none;margin:0}.cm.done{opacity:.45;text-decoration:line-through}
+@media print{nav,header .sub,#zr,#rooms,#inp,.rr,.kpi{display:none!important}.tab{display:block!important}body{padding:0;background:#fff}.card,#wrap{box-shadow:none;break-inside:avoid}svg{height:auto!important}}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--bd);z-index:5}
 nav button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;color:var(--mu);padding:8px 0;border-radius:12px}
 nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-style:normal;font-size:20px}
 </style></head><body>
-<header>Раскладка плитки <small>v7</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
-<section class="tab" id="t0"><div id="inp"><div class="g">
+<header>Раскладка плитки <small>v8</small></header><div class="sub">Симметрично от центра, размеры в мм</div>
+<section class="tab" id="t0"><div class="card" id="rooms"><h4 style="margin-top:0">Помещения</h4><div class="rr"><select id="rsel"></select><button id="rload">Открыть</button><button id="rdel">✕</button></div><div class="rr"><input id="rname" placeholder="Название (Кухня…)"><button id="rsave">Сохранить</button></div></div><div id="inp"><div class="g">
 <h4>Помещение</h4>
 <label>Длина (по горизонтали)<input id="rl" inputmode="numeric"></label>
 <label>Ширина (по вертикали)<input id="rw" inputmode="numeric"></label>
@@ -52,6 +55,8 @@ nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-sty
 <label>Ширина плитки<input id="tw" inputmode="numeric"></label>
 <label>Шов<input id="gj" inputmode="decimal"></label>
 <label>Запас, %<input id="rs" inputmode="numeric"></label>
+<label>Плиток в коробке<input id="pb" inputmode="numeric"></label>
+<label>Пропил (толщина реза)<input id="kf" inputmode="decimal"></label>
 <h4>Отступы от стен</h4>
 <label>Сверху<input id="ot" inputmode="numeric"></label>
 <label>Снизу<input id="ob" inputmode="numeric"></label>
@@ -72,8 +77,8 @@ nav button.on{background:var(--ac2);color:var(--ac)}nav i{display:block;font-sty
 <script>
 window.onerror=(m,u,l)=>{document.title='ERR '+m+' @'+l};
 const $=id=>document.getElementById(id);
-const F=['rl','rw','tl','tw','gj','rs','ot','ob','ol','or','ty'];
-const D={ang:0,rl:4000,rw:3000,tl:600,tw:300,gj:2,rs:10,ot:10,ob:10,ol:10,or:10,ty:'0'};
+const F=['rl','rw','tl','tw','gj','rs','pb','kf','ot','ob','ol','or','ty'];
+const D={pb:8,kf:2,ang:0,rl:4000,rw:3000,tl:600,tw:300,gj:2,rs:10,ot:10,ob:10,ol:10,or:10,ty:'0'};
 let S=Object.assign({},D,{cm:'seam'},JSON.parse(localStorage.getItem('tileApp')||'{}'));
 const Q=new URLSearchParams(location.search);F.concat('cm','ang').forEach(k=>{if(Q.has(k))S[k]=Q.get(k)});
 F.forEach(k=>{$(k).value=S[k];$(k).addEventListener('input',()=>{S[k]=$(k).value;upd()})});
@@ -204,7 +209,7 @@ const pxU=base[2]/Math.max(sv.clientWidth||360,280),minF=11*pxU;
   const items=[];
   for(const[d,len,off,od,fr]of[[D1,l1,(c2[0]+c2[1])/2-l2*0.25,D2,0.4],[D2,l2,(c1[0]+c1[1])/2+l1*0.36,D1,0.64]]){
    const c=[t.cx+od[0]*off,t.cy+od[1]*off],ch=chord(t.p,c,d);if(!ch)return;const L=ch[1]-ch[0];if(L<0.5)return;
-   const label=(items.length?'':t.g+' ')+fm(L);const f=Math.min(fs,L*2*Math.min(fr,1-fr)*0.8/(label.length*0.62+1.2),(d===D1?l2:l1)*0.32);
+   const fit=lb=>Math.min(fs,L*2*Math.min(fr,1-fr)*0.85/(lb.length*0.62+0.8),(d===D1?l2:l1)*0.34);let label=(items.length?'':t.g+' ')+fm(L),f=fit(label);const l2b=fm(L);if(fit(l2b)>f*1.35){label=l2b;f=fit(l2b)}
    const p1=[c[0]+d[0]*ch[0],c[1]+d[1]*ch[0]],p2=[c[0]+d[0]*ch[1],c[1]+d[1]*ch[1]];
    let ang=Math.atan2(d[1],d[0])*180/Math.PI;if(ang>90.01)ang-=180;if(ang<=-90.01)ang+=180;
    const mx=p1[0]+(p2[0]-p1[0])*fr,my=p1[1]+(p2[1]-p1[1])*fr,bb=bbox(mx,my,label,f,ang);
@@ -221,13 +226,20 @@ const pxU=base[2]/Math.max(sv.clientWidth||360,280),minF=11*pxU;
  // summary
 
  
- const tot=tiles.length,rs=n('rs'),need=Math.ceil(tot*(1+rs/100));
+ const tot=tiles.length,rs=n('rs'),pb=Math.max(1,Math.round(n('pb'))||1),kf=n('kf');
+ const opt=diag?null:optimise(cuts.map(t=>pieceInfo(t.loc,TA,TB)),TA,TB,kf);
+ const used=full+(opt?opt.tiles:cuts.length),need=Math.ceil(used*(1+rs/100)),nbox=Math.ceil(need/pb);
  const m2=W*H/1e6;
- $('kp').innerHTML=`<div><b>${need}</b><span>купить (+${rs}%)</span></div><div><b>${cuts.length}</b><span>подрезок / ${full} целых</span></div>`;
+ $('kp').innerHTML=`<div><b>${need}</b><span>купить (+${rs}%) · ${nbox} кор.</span></div><div><b>${cuts.length}</b><span>подрезок / ${full} целых</span></div>`;
  let h=`<table><tr><td>Плитка</td><td><b>${a}×${b}</b>, поворот ${AN}°</td></tr><tr><td>Рабочая площадь</td><td><b>${r1(W)}×${r1(H)} мм</b> (${m2.toFixed(2)} м²)</td></tr>
  <tr><td>Целых плиток</td><td><b>${full}</b></td></tr><tr><td>Подрезанных</td><td><b>${cuts.length}</b></td></tr>
- <tr><td>Всего мест</td><td><b>${tot}</b></td></tr><tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b></td></tr></table>`;
- h+='<h4>Подрезка — буквы как на чертеже</h4><div class="lgl">'+$('lgd').innerHTML+'</div>'+positions(tiles,{RL,RW,W,H,ol,or,ot,ob,g,a,b,cx,cy,seam,diag,AN})+verify(tiles,{sh,W,H,g,a,b,cx,cy,diag,TA,TB,RL,RW,ol,or,ot,ob});
+ <tr><td>Всего мест</td><td><b>${tot}</b></td></tr>
+<tr><td>Плиток без обрезков-повторов</td><td><b>${full+cuts.length}</b></td></tr>
+${opt?`<tr><td>С использованием обрезков (пропил ${fm(kf)} мм)</td><td><b>${used}</b> (экономия ${full+cuts.length-used})</td></tr>`:''}
+<tr><td>Купить с запасом ${rs}%</td><td><b>${need} шт</b> = ${nbox} кор. по ${pb} (${nbox*pb} шт)</td></tr>
+<tr><td>Площадь плитки к покупке</td><td><b>${(nbox*pb*TA*TB/1e6).toFixed(2).replace('.',',')} м²</b></td></tr></table>
+<div class="rr" style="margin-top:10px"><button onclick="shareLink()">🔗 Ссылка</button><button onclick="exportPNG()">🖼 PNG</button><button onclick="print()">🖨 PDF/печать</button></div>`;
+ h+='<h4>Подрезка — буквы как на чертеже</h4><div class="lgl">'+$('lgd').innerHTML+'</div>'+cutMap(groups,opt,TA,TB)+positions(tiles,{RL,RW,W,H,ol,or,ot,ob,g,a,b,cx,cy,seam,diag,AN})+verify(tiles,{sh,W,H,g,a,b,cx,cy,diag,TA,TB,RL,RW,ol,or,ot,ob});
  if(!diag){const ew=Math.min(...cuts.filter(t=>t.w<a-0.05).map(t=>t.w),a),eh=Math.min(...cuts.filter(t=>t.h<b-0.05).map(t=>t.h),b);
   if(ew<a/3)h+=`<div class="warn">Узкая подрезка у левой/правой стены: ${r1(ew)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
   if(eh<b/3)h+=`<div class="warn">Узкая подрезка у верхней/нижней стены: ${r1(eh)} мм (меньше 1/3 плитки). ${seam?'Попробуйте «Центр по плитке».':'Попробуйте «Центр по шву».'}</div>`;
@@ -282,7 +294,10 @@ function detail(Lt){const g=CUR.groups.find(x=>x.L===Lt);if(!g)return;const A=g.
  sv+='</svg>';
  let h=`<div class="dh"><b class="badge">${g.L}</b><div><div style="font-weight:700;font-size:18px">Кусок ${g.L} — ${g.n} шт</div><div class="mu">Плитка ${TA}×${TB} мм${CUR.AN?`, уложена с поворотом ${CUR.AN}° по часовой`:''}</div></div><button onclick="$('dlg').hidden=true">✕</button></div>${sv}
  <div class="mu" style="margin:8px 0">Оранжевое — оставить (кладётся на пол), штриховка — отход. Красные линии — резы. Угол 1 — верхний левый угол плитки, сторона 1–2 — длинная (${TA} мм), сторона 1–4 — короткая (${TB} мм). Все размеры точные, округление до 0,5 мм.</div>`;
- h+=`<h4>${A.rect?'Размер':'Габарит (наибольший размер по осям плитки)'}</h4><table><tr><td>По длине (вдоль 1–2)</td><td><b>${fm(A.du)} мм</b> (отход ${fm(TA-A.du)})</td></tr><tr><td>По ширине (вдоль 1–4)</td><td><b>${fm(A.dv)} мм</b> (отход ${fm(TB-A.dv)})</td></tr><tr><td>Площадь куска</td><td><b>${(A.area/100).toFixed(1).replace('.',',')} см²</b> из ${(TA*TB/100).toFixed(1).replace('.',',')}</td></tr></table>`;
+ const wa=TA*TB-A.area,wp=wa/(TA*TB)*100,c1=v=>(v/100).toFixed(1).replace('.',',');
+ h+=(A.rect?`<h4>Размер</h4><table><tr><td>По длине (вдоль 1–2)</td><td><b>${fm(A.du)} мм</b> (отрезать ${fm(TA-A.du)})</td></tr><tr><td>По ширине (вдоль 1–4)</td><td><b>${fm(A.dv)} мм</b> (отрезать ${fm(TB-A.dv)})</td></tr>`
+  :`<h4>Размер — стороны куска по порядку</h4><table>`+A.Ed.map(e=>`<tr><td>P${e.i+1}–P${e.j+1}${e.cut?' <span style="color:#be123c">рез</span>':''}</td><td><b>${fm(e.len)} мм</b></td></tr>`).join(''))+
+  `<tr><td>Площадь куска</td><td><b>${c1(A.area)} см²</b> (${(100-wp).toFixed(1).replace('.',',')}%)</td></tr><tr><td>Отход</td><td><b>${c1(wa)} см²</b> (${wp.toFixed(1).replace('.',',')}% плитки ${c1(TA*TB)} см²)</td></tr></table>`;
  h+=`<h4>Резы — разметка от углов плитки</h4><table>`+A.Ed.filter(e=>e.cut).map((e,k)=>`<tr><td colspan="2" style="text-align:left"><b>Рез ${k+1}</b> (длина ${fm(e.len)} мм):<br>от P${e.i+1} — ${A.V[e.i].d}<br>до P${e.j+1} — ${A.V[e.j].d}</td></tr>`).join('')+'</table>';
  h+=`<h4>Вершины и углы</h4><table>`+A.V.map((v,i)=>`<tr><td><b>P${i+1}</b>: ${v.d}</td><td>${(Math.round(v.ang*10)/10).toString().replace('.',',')}°</td></tr>`).join('')+'</table>';
  h+=`<h4>Стороны куска</h4><table>`+A.Ed.map(e=>`<tr><td>P${e.i+1}–P${e.j+1} ${e.cut?'<span style="color:#be123c">(рез)</span>':'(заводская кромка)'}</td><td><b>${fm(e.len)} мм</b></td></tr>`).join('')+'</table>';
@@ -312,7 +327,7 @@ function verify(tiles,c){const res=[];const ok=(n,b,d)=>res.push([n,b,d]);const 
   ok(`${ax?'По горизонтали':'По вертикали'}: все швы ровно ${fm(c.g)} мм`,!gapBad,'')}}
  if(c.diag){let miss=0;const key=t=>Math.round(t.cx*100)+','+Math.round(t.cy*100);const set=new Map(tiles.map(t=>[key(t),t]));
   for(const t of tiles){const m=set.get(Math.round((2*c.cx-t.cx)*100)+','+Math.round((2*c.cy-t.cy)*100));if(!m||Math.abs(m.ar-t.ar)>0.01)miss++}
-  ok('Симметрия относительно центра: у каждого куска есть равный напротив',!miss,miss?miss+' без пары':'')}
+  ok('Симметрия относительно центра: у каждого куска есть равный напротив',miss?(c.sh?'w':false):true,miss?miss+' без пары'+(c.sh?' — при укладке вразбежку с поворотом ряды по разные стороны центрального шва сдвинуты по-разному (свойство раскладки). Полная симметрия: «Центр по плитке» с 1/2, или «Прямая».':''):'')}
  else for(const ax of[1,0]){let bad=0;const rs=rowsOf(tiles,ax);for(const r of rs){const l=r[0][1]-r[0][0],q=r[r.length-1][1]-r[r.length-1][0];if(Math.abs(l-q)>T)bad++}
   ok(ax?'На каждой горизонтали подрезка у левой и правой стены одинаковая':'На каждой вертикали подрезка у верхней и нижней стены одинаковая',bad?(c.sh>0.3&&c.sh<0.34?'w':false):true,bad?`${bad} из ${rs.length} не равны${c.sh?' — при смещении 1/3 соседние ряды сдвинуты на 1/3 и 2/3, поэтому слева и справа куски разные (это свойство раскладки, не ошибка расчёта); для полной симметрии выберите «Прямая» или «1/2»':''}`:'')}
  let outB=0;for(const t of tiles)for(const p of t.loc)if(p[0]<-0.01||p[1]<-0.01||p[0]>c.TA+0.01||p[1]>c.TB+0.01)outB++;
@@ -322,8 +337,44 @@ function verify(tiles,c){const res=[];const ok=(n,b,d)=>res.push([n,b,d]);const 
  const allOk=res.every(r=>r[1]!==false);
  return`<h4>Автопроверка расчёта ${allOk?'✅':'❌'}</h4><table>`+res.map(([n,b,d])=>`<tr><td>${n}${b==='w'?'<br><span class=mu>'+d+'</span>':''}</td><td>${b===true?'✅':b==='w'?'⚠️':'❌ '+d}</td></tr>`).join('')+'</table>'}
 function lod(){if(!VB)return;const s=toSvg(0,0)[2];const on=new Set();
- document.querySelectorAll('#sv .ar').forEach(g=>{const v=g.dataset.f/s>=11;g.style.display=v?'':'none';if(v)on.add(g.dataset.pid)});
+ document.querySelectorAll('#sv .ar').forEach(g=>{const v=g.dataset.f/s>=9;g.style.display=v?'':'none';if(v)on.add(g.dataset.pid)});
  document.querySelectorAll('#sv .lt').forEach(t=>t.style.display=on.has(t.dataset.pid)?'none':'')}
+
+// ---- v8 helpers
+function optimise(P,TA,TB,kf){// guillotine reuse of rectangular offcuts
+ const pcs=P.map(p=>p.rect?[p.du,p.dv]:null);if(pcs.some(x=>!x))return null;
+ pcs.sort((x,y)=>y[0]*y[1]-x[0]*x[1]);const free=[];let tiles=0,reused=0;const plan=[];
+ for(const[w,h]of pcs){let bi=-1,bs=Infinity,rot=false;
+  free.forEach((f,i)=>{for(const r of[false,true]){const W=r?h:w,H=r?w:h;if(W<=f[0]+1e-9&&H<=f[1]+1e-9){const s=f[0]*f[1];if(s<bs){bs=s;bi=i;rot=r}}}});
+  let f;if(bi<0){tiles++;f=[TA,TB]}else{f=free.splice(bi,1)[0];reused++}
+  const W=rot?h:w,H=rot?w:h;plan.push({w,h,from:bi<0?'новая плитка':`обрезок ${fm(f[0])}×${fm(f[1])}`});
+  // split: right strip and bottom strip (guillotine)
+  const rw=f[0]-W-kf,bh=f[1]-H-kf;if(rw>=20)free.push([rw,f[1]]);if(bh>=20)free.push([W,bh])}
+ return{tiles,reused,plan}}
+function cutMap(groups,opt,TA,TB){const key='tileDone:'+location.search.length+JSON.stringify([S.rl,S.rw,S.tl,S.tw,S.gj,S.ot,S.ob,S.ol,S.or,S.ty,S.cm,S.ang]);const done=JSON.parse(localStorage.getItem(key)||'{}');
+ window._dk=key;
+ const gs=groups.slice().sort((x,y)=>x.A.rect===y.A.rect?(x.A.rect?(TA-x.A.du)-(TA-y.A.du)||(TB-x.A.dv)-(TB-y.A.dv):y.A.area-x.A.area):x.A.rect?-1:1);
+ let h='<h4>Карта резки — по порядку, отмечайте готовое</h4><div class="mu">Порядок: сначала прямые резы, сгруппированы по одной установке упора пилы.</div>';
+ h+=gs.map((g,i)=>{const A=g.A,ck=done[g.L];const what=A.rect?`отрезать ${TA-A.du>0.25?fm(TA-A.du)+' по длине':''}${TA-A.du>0.25&&TB-A.dv>0.25?' и ':''}${TB-A.dv>0.25?fm(TB-A.dv)+' по ширине':''} → кусок ${fm(A.du)}×${fm(A.dv)}`:`косой кусок, резов ${A.Ed.filter(e=>e.cut).length}: `+A.Ed.filter(e=>e.cut).map(e=>`${A.V[e.i].d} → ${A.V[e.j].d}`).join('; ');
+  return`<label class="cm${ck?' done':''}"><input type="checkbox" data-l="${g.L}" ${ck?'checked':''} onchange="markDone(this)"><span><b>${i+1}. [${g.L}] ×${g.n}</b> — ${what}</span></label>`}).join('');
+ if(opt&&opt.reused)h+=`<div class="mu" style="margin-top:8px">♻️ Обрезки: ${opt.reused} кусков можно выпилить из отходов других резов (учтён пропил). Порядок: режьте крупные куски первыми, остаток откладывайте с подписью размера.</div>`;
+ return h}
+function markDone(c){const d=JSON.parse(localStorage.getItem(window._dk)||'{}');d[c.dataset.l]=c.checked;localStorage.setItem(window._dk,JSON.stringify(d));c.parentElement.classList.toggle('done',c.checked)}
+function shareURL(){const p=new URLSearchParams();F.concat('cm','ang').forEach(k=>p.set(k,S[k]));p.set('tab','1');return location.origin+location.pathname+'?'+p}
+async function shareLink(){const u=shareURL();try{if(navigator.share)await navigator.share({title:'Раскладка плитки',url:u});else{await navigator.clipboard.writeText(u);alert('Ссылка скопирована:\n'+u)}}catch(e){prompt('Ссылка:',u)}}
+function exportPNG(){const s=$('sv').cloneNode(true);s.setAttribute('viewBox',base.join(' '));s.setAttribute('xmlns','http://www.w3.org/2000/svg');s.querySelectorAll('.ar').forEach(e=>e.remove());s.querySelectorAll('.lt').forEach(e=>e.style.display='');
+ const W=2000,H=Math.round(W*base[3]/base[2]);s.setAttribute('width',W);s.setAttribute('height',H);
+ const img=new Image();img.onload=()=>{const leg=CUR.groups.map(g=>`${g.L}: ${g.A.rect?fm(g.A.du)+'×'+fm(g.A.dv):g.A.Ed.map(e=>fm(e.len)).join('/')} — ${g.n} шт`);
+  const lh=40,c=document.createElement('canvas');c.width=W;c.height=H+80+leg.length*lh;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,W,H);
+  x.fillStyle='#111';x.font='bold 34px sans-serif';x.fillText(`Комната ${S.rl}×${S.rw}, плитка ${S.tl}×${S.tw}, шов ${S.gj}, поворот ${S.ang}°`,30,H+50);x.font='30px sans-serif';leg.forEach((t,i)=>x.fillText(t,30,H+100+i*lh));
+  const a=document.createElement('a');a.download='raskladka.png';a.href=c.toDataURL('image/png');a.click()};
+ img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(s))}
+function rooms(){return JSON.parse(localStorage.getItem('tileRooms')||'{}')}
+function fillRooms(){const r=rooms();$('rsel').innerHTML='<option value="">— сохранённые —</option>'+Object.keys(r).map(k=>`<option>${k.replace(/</g,'&lt;')}</option>`).join('')}
+$('rsave').onclick=()=>{const nm=$('rname').value.trim();if(!nm)return alert('Введите название');const r=rooms();r[nm]=Object.assign({},S);localStorage.setItem('tileRooms',JSON.stringify(r));fillRooms();$('rsel').value=nm};
+$('rload').onclick=()=>{const r=rooms()[$('rsel').value];if(!r)return;Object.assign(S,r);F.forEach(k=>$(k).value=S[k]);$('ang').value=S.ang;$('rname').value=$('rsel').value;VB=null;upd()};
+$('rdel').onclick=()=>{const k=$('rsel').value;if(!k||!confirm('Удалить «'+k+'»?'))return;const r=rooms();delete r[k];localStorage.setItem('tileRooms',JSON.stringify(r));fillRooms()};
+fillRooms();
 
 // pan/zoom
 const sv=$('sv'),pts=new Map();let last=null;
